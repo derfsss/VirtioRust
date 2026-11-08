@@ -16,6 +16,13 @@
 struct ExecIFace *IExec = NULL;
 struct DOSIFace  *IDOS  = NULL;
 
+#ifndef GIT_HASH
+#define GIT_HASH "unknown"
+#endif
+/* The commit s2test was built from (tools/build-package.sh passes it), so
+ * a copy shipped in another project's archive can be traced. */
+const char build_banner[] = "s2test build " GIT_HASH;
+
 extern int32 rust_main(STRPTR args, int32 arglen);
 
 int32 _start(STRPTR argstring, int32 arglen, struct ExecBase *sysbase)
@@ -24,6 +31,7 @@ int32 _start(STRPTR argstring, int32 arglen, struct ExecBase *sysbase)
     int32 ret = RETURN_FAIL;
 
     IExec = (struct ExecIFace *)sysbase->MainInterface;
+    (void)*(volatile const char *)build_banner;   /* keep it linked */
     IExec->Obtain();
 
     DOSBase = IExec->OpenLibrary("dos.library", 52);

@@ -23,7 +23,10 @@ RUST_LIB  = target/powerpc-unknown-amigaos/release/libs2test.a
 
 # Compiler flags — NO CRT, driver-compatible
 # -ffunction-sections/-fdata-sections + --gc-sections strips unused glue
-CFLAGS    = -O2 -Wall -D__AMIGAOS4__ -U__USE_INLINE__ -I$(SDK_INC) \
+# The commit (tools/build-package.sh passes it), for the build banner.
+GIT_HASH ?= unknown
+
+CFLAGS    = -O2 -Wall -D__AMIGAOS4__ -U__USE_INLINE__ -I$(SDK_INC) -DGIT_HASH=\"$(GIT_HASH)\" \
             -fno-tree-loop-distribute-patterns -ffunction-sections -fdata-sections
 
 # Linker flags — driver mode (no CRT, no default libs)

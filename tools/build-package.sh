@@ -28,5 +28,11 @@ cargo +amigaos build --release "$@"
 LIB="$(ls target/powerpc-unknown-amigaos/release/*.a)"
 echo "staticlib: $LIB ($(stat -c %s "$LIB") bytes)"
 
+# The commit, for the binary's banner: 8 hex digits, "-dirty" when tracked
+# files differ from HEAD. Makefiles that ignore GIT_HASH are unaffected.
+GIT_HASH="$(git -C "$REPO" rev-parse --short=8 HEAD 2>/dev/null || echo unknown)"
+git -C "$REPO" diff --quiet HEAD 2>/dev/null || GIT_HASH="$GIT_HASH-dirty"
+echo "commit: $GIT_HASH"
+
 # MAKE_ARGS passes make variables through, e.g. MAKE_ARGS="DISK=1".
-docker run --rm -e MAKE_ARGS="${MAKE_ARGS:-}" -v "$REPO:/repo" -w "/repo/$PKG" "$IMAGE"     sh -c 'make clean $MAKE_ARGS >/dev/null && make $MAKE_ARGS'
+docker run --rm -e MAKE_ARGS="${MAKE_ARGS:-} GIT_HASH=$GIT_HASH" -v "$REPO:/repo" -w "/repo/$PKG" "$IMAGE"     sh -c 'make clean $MAKE_ARGS >/dev/null && make $MAKE_ARGS'
