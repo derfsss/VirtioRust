@@ -10,7 +10,7 @@ here.
 |---|---|---|
 | virtionet.device | SANA-II network driver for `virtio-net-pci` | `drivers/virtio-net` |
 | virtiorng.device | entropy device for `virtio-rng-pci` (Kickstart and disk builds) | `drivers/virtio-rng` |
-| virtioscsi.device | block driver for `virtio-scsi-pci` (a drop-in for the C driver, Kickstart boot) and `vscsirs.device` (development build) | `drivers/virtio-scsi` |
+| virtioscsi.device | block driver for `virtio-scsi-pci` (a drop-in for the C driver, [VirtualSCSIDevice](https://github.com/derfsss/VirtualSCSIDevice); Kickstart boot) and `vscsirs.device` (development build) | `drivers/virtio-scsi` |
 
 The generic virtio layer (transport, modern interface, rings, queues, and
 the net and scsi definitions) is the crate's `virtio` feature; the drivers
@@ -492,7 +492,8 @@ After the fix nothing arrives out of order and the CPU is the limit
 ## rustsocket.library
 
 rustsocket.library, the Roadshow-compatible TCP/IP stack on smoltcp that
-grew up here, now has its own repository, RustSocket. This repository's
+grew up here, now has its own repository,
+[RustSocket](https://github.com/derfsss/RustSocket). This repository's
 QEMU machines (`tools/vnetbench/boot.sh amigaone-rs`, the `STACK=rustsocket`
 option of `tools/qemu/run-amigaone-virtionet.sh`) are still where it is
 tested on virtio-net.
@@ -581,6 +582,27 @@ Results, QEMU 11.0.50:
 | `soak.script`, 30 minutes, both units | 427,873 operations, 0 bad answers, 65 GB read, 16,414 aborted, 0 lost requests, every task gone after each round, 2,384 resets all recovered, free memory 118 KB higher after round 2. Its two reset-count FAILs were the checker's: a kid's CMD_FLUSH aborts a queued reset now and then (0.4%), which the check now counts (a 2-minute rerun: 13/13) |
 | `disk.script` | each cycle 9/9 + 9/9, torture 11/11 + 11/11; three expunges, each unloading the device; free memory 1859964928, 1859985408, 1859973120 |
 
+## Credits
+
+- [derfsss/rust-amigaos4-crate](https://github.com/derfsss/rust-amigaos4-crate):
+  the `amigaos4` crate the drivers are built on (the `amigaos4/` submodule).
+- [AmigaLabs/rust](https://github.com/AmigaLabs/rust) (branch `amigaos-port`):
+  the Rust fork with the `powerpc-unknown-amigaos` target.
+- [walkero-gr/amigagccondocker](https://github.com/walkero-gr/amigagccondocker):
+  the cross-compiler Docker image (gcc and the AmigaOS SDK) the packages
+  link in.
+- [derfsss/VirtualSCSIDevice](https://github.com/derfsss/VirtualSCSIDevice):
+  the C virtioscsi.device that the Rust driver replaces; its test suite runs
+  unchanged against the Rust drop-in.
+- prism2.device by Neil Cafferkey (Aminet): the SANA-II driver
+  virtionet.device's SANA-II details were compared with.
+- [QEMU](https://github.com/qemu/qemu): the virtio devices, and the
+  AmigaOne, Pegasos II and Sam460ex machines everything here is tested on.
+
 ## Licence
 
 MIT; see `LICENSE`.
+
+---
+
+Richard Gibbs — rich_gibbs@hotmail.com
