@@ -55,8 +55,12 @@ if [ "${NOVNET2:-}" != 1 ]; then
   VNET2ARGS=(-netdev "user,id=vnet2,net=10.0.4.0/24,dhcpstart=10.0.4.15,hostfwd=tcp:127.0.0.1:$P1-10.0.4.15:4510,hostfwd=udp:127.0.0.1:$((P1+1))-10.0.4.15:4511" -device "${VNET2:-virtio-net-pci,netdev=vnet2,mac=52:54:00:12:34:58,addr=0x0c}")
 fi
 VNET3ARGS=()
-if [ "${VNET3:-}" = 1 ]; then
-  VNET3ARGS=(-netdev "user,id=vnet3,net=10.0.5.0/24,dhcpstart=10.0.5.15,hostfwd=tcp:127.0.0.1:$P2-10.0.5.15:4510,hostfwd=udp:127.0.0.1:$((P2+1))-10.0.5.15:4511" -device 'virtio-net-pci,netdev=vnet3,mac=52:54:00:12:34:59,addr=0x0d')
+# VNET3=<device options> instead of 1 puts another card there (an e1000e
+# for a two-card driver test).
+if [ -n "${VNET3:-}" ]; then
+  V3DEV='virtio-net-pci,netdev=vnet3,mac=52:54:00:12:34:59,addr=0x0d'
+  [ "$VNET3" != 1 ] && V3DEV="$VNET3"
+  VNET3ARGS=(-netdev "user,id=vnet3,net=10.0.5.0/24,dhcpstart=10.0.5.15,hostfwd=tcp:127.0.0.1:$P2-10.0.5.15:4510,hostfwd=udp:127.0.0.1:$((P2+1))-10.0.5.15:4511" -device "$V3DEV")
 fi
 # VNET4=1 adds a card on a segment the two machines share (a dgram netdev
 # between 127.0.0.1 ports 12360 and 12361; no slirp, no DHCP: 10.0.6.0/24,
