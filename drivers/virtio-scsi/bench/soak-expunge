@@ -1,0 +1,26 @@
+; soak-expunge: 20 rounds of vscsitest on the raw units (0-2) and an
+; expunge, with free memory before and after. No filesystem may be mounted
+; on vscsirs.device (the expunge must find nothing open).
+; Logs: SHARED:vscsi/soak/expunge.log
+FailAt 30
+Copy SHARED:vscsi/vscsirs.device DEVS: QUIET
+Copy SHARED:vscsi/vscsitest RAM: QUIET
+Copy SHARED:vscsi/expunge RAM: QUIET
+Protect RAM:vscsitest +rwed QUIET
+Protect RAM:expunge +rwed QUIET
+MakeDir SHARED:vscsi/soak >NIL:
+Echo "start" >SHARED:vscsi/soak/expunge.log
+Avail TOTAL >>SHARED:vscsi/soak/expunge.log
+Set n 0
+Lab round
+RAM:vscsitest vscsirs.device 3 5 >RAM:vt.out
+Search RAM:vt.out "tests passed" >>SHARED:vscsi/soak/expunge.log
+RAM:expunge DEVICE vscsirs.device >NIL:
+Set n `Eval $n + 1`
+If VAL $n LT 20
+  Skip round BACK
+EndIf
+Echo "end" >>SHARED:vscsi/soak/expunge.log
+Avail FLUSH >NIL:
+Avail TOTAL >>SHARED:vscsi/soak/expunge.log
+Echo "soak-expunge done"

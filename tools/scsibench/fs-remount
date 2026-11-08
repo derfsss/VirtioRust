@@ -1,0 +1,17 @@
+; fs-remount: after a reboot (stop QEMU with a tool that syncs the guest first),
+; mount SBA: and SBB: again and hash what fs and fs-par wrote: everything
+; must have survived on the disk.
+;   Execute SHARED:sbench/fs-remount
+FailAt 30
+Mount SBA: FROM SHARED:sbench/sb.mountlist
+Mount SBB: FROM SHARED:sbench/sb.mountlist
+CD SBA:
+C:MD5Sum C/#? Libs/#? >SHARED:sbench/out/fs-ffs-remount.md5
+CD SBA:par
+C:MD5Sum #? >SHARED:sbench/out/fs-parA-remount.md5
+CD SBB:
+C:MD5Sum C/#? Libs/#? >SHARED:sbench/out/fs-sfs-remount.md5
+CD SBB:par
+C:MD5Sum #? >SHARED:sbench/out/fs-parB-remount.md5
+CD RAM:
+Echo "fs-remount done" >SHARED:sbench/out/fs-remount.done

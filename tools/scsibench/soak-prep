@@ -1,0 +1,25 @@
+; soak-prep: before the 30-minute soak on the drop-in (a fresh boot). Mounts
+; and formats SBA: (FFS2) and SBB: (SFS) on unit 5, records the reference
+; hashes and free memory, and clears the stop file. Then start three jobs
+; at once:
+;   Execute SHARED:sbench/soak-torture        (2 x 900 s, then the stop file)
+;   Execute SHARED:sbench/soak-fs SBA ffs     (rounds until the stop file)
+;   Execute SHARED:sbench/soak-fs SBB sfs
+; and when all three are done: Execute SHARED:sbench/soak-end
+FailAt 30
+MakeDir SHARED:sbench/soak >NIL:
+Delete SHARED:sbench/soak/#? QUIET FORCE >NIL:
+Copy SHARED:sbench/vscsitest RAM: QUIET
+Protect RAM:vscsitest +rwed QUIET
+Mount SBA: FROM SHARED:sbench/sb.mountlist
+Mount SBB: FROM SHARED:sbench/sb.mountlist
+Echo "" >RAM:cr
+SYS:System/Format <RAM:cr DRIVE SBA: NAME SoakFFS QUICK NOICONS
+SYS:System/Format <RAM:cr DRIVE SBB: NAME SoakSFS QUICK NOICONS
+CD SYS:Libs
+C:MD5Sum #? >SHARED:sbench/soak/src.md5
+CD RAM:
+Avail FLUSH >NIL:
+Avail TOTAL >SHARED:sbench/soak/mem-start.txt
+Date >SHARED:sbench/soak/start.txt
+Echo "soak ready"

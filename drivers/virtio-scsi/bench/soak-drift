@@ -1,0 +1,8 @@
+FailAt 30
+Avail FLUSH >NIL:
+Avail TOTAL >SHARED:vscsi/soak/drift-start.txt
+Execute SHARED:vscsi/soakraw 100
+Avail FLUSH >NIL:
+Avail TOTAL >SHARED:vscsi/soak/drift-end.txt
+Type SHARED:vscsi/soak/drift-start.txt
+Type SHARED:vscsi/soak/drift-end.txt

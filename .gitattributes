@@ -1,0 +1,23 @@
+# Enforce platform-appropriate line endings regardless of core.autocrlf.
+# Shell scripts must be LF so POSIX shells (/bin/sh, bash) can execute them
+# on Linux / macOS / WSL. .bat files must stay CRLF for cmd.exe.
+
+*                text=auto eol=lf
+*.sh             text eol=lf
+*.rs             text eol=lf
+*.toml           text eol=lf
+*.json           text eol=lf
+*.md             text eol=lf
+*.c              text eol=lf
+*.h              text eol=lf
+Makefile         text eol=lf
+*.mk             text eol=lf
+
+*.bat            text eol=crlf
+*.cmd            text eol=crlf
+
+*.library        binary
+*.library.debug  binary
+*.a              binary
+*.so             binary
+*.o              binary

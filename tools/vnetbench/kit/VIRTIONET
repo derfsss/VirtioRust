@@ -1,0 +1,3 @@
+device=virtionet.device
+unit=0
+configure=dhcp

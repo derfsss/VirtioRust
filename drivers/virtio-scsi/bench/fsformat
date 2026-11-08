@@ -1,0 +1,7 @@
+FailAt 30
+Echo "" >RAM:cr
+SYS:System/Format <RAM:cr DRIVE VS4A: NAME FFSTest QUICK NOICONS
+SYS:System/Format <RAM:cr DRIVE VS4B: NAME SFSTest QUICK NOICONS
+Info VS4A:
+Info VS4B:
+Echo "formatted"

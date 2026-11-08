@@ -1,0 +1,23 @@
+.key VOL/A,TAG/A
+.bra {
+.ket }
+; soak-fs VOL TAG: copy SYS:Libs to VOL:soak, hash it, delete it, until
+; SHARED:sbench/soak/stop exists. Every round's MD5 list is appended to
+; SHARED:sbench/soak/TAG.md5 (tools/soakcheck.py checks each round).
+FailAt 30
+Echo "start" >SHARED:sbench/soak/{TAG}.log
+Date >>SHARED:sbench/soak/{TAG}.log
+Set n 0
+Lab round
+Copy SYS:Libs {VOL}:soak ALL QUIET
+CD {VOL}:soak
+C:MD5Sum #? >>SHARED:sbench/soak/{TAG}.md5
+CD RAM:
+Delete {VOL}:soak ALL QUIET FORCE >NIL:
+Set n `Eval $n + 1`
+If NOT EXISTS SHARED:sbench/soak/stop
+  Skip round BACK
+EndIf
+Echo "end after $n rounds" >>SHARED:sbench/soak/{TAG}.log
+Date >>SHARED:sbench/soak/{TAG}.log
+Echo "{TAG} done" >SHARED:sbench/soak/{TAG}.done

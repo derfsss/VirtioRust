@@ -1,0 +1,12 @@
+FailAt 30
+Copy SHARED:vscsi/expunge RAM: QUIET
+Protect RAM:expunge +rwed QUIET
+RAM:expunge DEVICE vscsirs.device
+Copy SHARED:vscsi/vscsirs.device DEVS: QUIET
+Copy SHARED:vscsi/vscsitest RAM: QUIET
+Protect RAM:vscsitest +rwed QUIET
+RAM:vscsitest vscsirs.device 5
+RAM:expunge DEVICE vscsirs.device
+RAM:vscsitest vscsirs.device 5
+List DH0: QUICK >NIL:
+Echo "system disk still answers"

@@ -1,0 +1,11 @@
+; soak-end: after soak-torture and both soak-fs jobs are done.
+FailAt 30
+Avail FLUSH >NIL:
+Avail TOTAL >SHARED:sbench/soak/mem-end.txt
+Type SHARED:sbench/soak/start.txt
+Type SHARED:sbench/soak/end.txt
+Type SHARED:sbench/soak/mem-start.txt
+Type SHARED:sbench/soak/mem-end.txt
+Search SHARED:sbench/soak/torture.txt "torture:" NONUM
+Type SHARED:sbench/soak/ffs.log
+Type SHARED:sbench/soak/sfs.log

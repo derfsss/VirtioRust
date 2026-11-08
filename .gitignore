@@ -1,0 +1,31 @@
+# Rust build output
+target/
+
+# C objects from the package Makefiles
+build/
+
+# Linked AmigaOS binaries
+drivers/virtio-net/virtionet.device
+drivers/virtio-rng/virtiorng.device
+drivers/virtio-rng/disk/
+drivers/virtio-scsi/vscsirs.device
+drivers/virtio-scsi/virtioscsi.device
+testprogs/s2test/s2test
+testprogs/rngread/rngread
+testprogs/vscsitest/vscsitest
+testprogs/netprof/netprof
+
+# Built tester kits (tools/vnetbench/make-kit.sh)
+dist/
+
+# Editor / OS state
+.vscode/
+.idea/
+*.swp
+.DS_Store
+Thumbs.db
+__pycache__/
+
+# Local working notes (not published)
+CLAUDE.md
+tools/qemu/local.env

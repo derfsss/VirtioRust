@@ -1,0 +1,18 @@
+.key ROUNDS/A
+; soakraw ROUNDS: vscsitest on the raw units 0-2 (never unit 4, the
+; filesystem disk), ROUNDS times; each round's tally line to
+; SHARED:vscsi/soak/raw.log.
+FailAt 30
+Echo "start" >SHARED:vscsi/soak/raw.log
+Date >>SHARED:vscsi/soak/raw.log
+Set n 0
+Lab round
+RAM:vscsitest vscsirs.device 3 5 >RAM:vtr.out
+Search RAM:vtr.out "tests passed" >>SHARED:vscsi/soak/raw.log
+Set n `Eval $n + 1`
+If VAL $n LT <ROUNDS>
+  Skip round BACK
+EndIf
+Echo "end after $n rounds" >>SHARED:vscsi/soak/raw.log
+Date >>SHARED:vscsi/soak/raw.log
+Echo "raw done" >SHARED:vscsi/soak/raw.done

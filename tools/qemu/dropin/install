@@ -1,0 +1,12 @@
+FailAt 21
+; Another stack (SHARED:dropin/bsdsocket.library) as bsdsocket.library,
+; configured by Roadshow's own start-up (AddNetInterface), as Roadshow is.
+; Network-Startup.sweep is Roadshow's S:Network-Startup with "FailAt 30"
+; added, so the guest's remote-control daemon (MCPd) still starts if
+; AddNetInterface fails. Roadshow's originals stay beside them.
+Copy LIBS:bsdsocket.library LIBS:bsdsocket.library.roadshow CLONE QUIET
+Copy S:Network-Startup S:Network-Startup.roadshow CLONE QUIET
+Copy SHARED:dropin/bsdsocket.library LIBS:bsdsocket.library QUIET
+Protect LIBS:bsdsocket.library rwed
+Copy SHARED:dropin/Network-Startup.sweep S:Network-Startup QUIET
+List LIBS:bsdsocket#? S:Network-Startup#?

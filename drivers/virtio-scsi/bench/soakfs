@@ -1,0 +1,21 @@
+.key VOL/A,TAG/A,ROUNDS/A
+; soakfs VOL TAG ROUNDS: copy SYS:Libs to VOL:soak, hash it, delete it,
+; ROUNDS times. Every round's MD5 list goes to SHARED:vscsi/soak/TAG.md5
+; (appended), for tools/md5cmp.py per round on the host.
+FailAt 30
+Echo "start" >SHARED:vscsi/soak/<TAG>.log
+Date >>SHARED:vscsi/soak/<TAG>.log
+Set n 0
+Lab round
+Copy SYS:Libs <VOL>:soak ALL QUIET
+CD <VOL>:soak
+C:MD5Sum #? >>SHARED:vscsi/soak/<TAG>.md5
+CD RAM:
+Delete <VOL>:soak ALL QUIET FORCE >NIL:
+Set n `Eval $n + 1`
+If VAL $n LT <ROUNDS>
+  Skip round BACK
+EndIf
+Echo "end after $n rounds" >>SHARED:vscsi/soak/<TAG>.log
+Date >>SHARED:vscsi/soak/<TAG>.log
+Echo "<TAG> done" >SHARED:vscsi/soak/<TAG>.done

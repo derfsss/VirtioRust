@@ -1,0 +1,7 @@
+# Build for the AmigaLabs powerpc-unknown-amigaos target.
+#
+# The crate is a staticlib, so rustc never links: the Makefile links it with
+# ppc-amigaos-gcc -nostartfiles -nodefaultlibs, without clib4. See the
+# repository README for how to install the AmigaLabs compiler.
+[build]
+target = "powerpc-unknown-amigaos"

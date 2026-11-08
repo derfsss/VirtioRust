@@ -1,0 +1,3 @@
+[submodule "amigaos4"]
+	path = amigaos4
+	url = https://github.com/derfsss/rust-amigaos4-crate.git

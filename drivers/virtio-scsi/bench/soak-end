@@ -1,0 +1,5 @@
+FailAt 30
+Avail FLUSH >NIL:
+Avail TOTAL >SHARED:vscsi/soak/mem-end.txt
+Type SHARED:vscsi/soak/mem-start.txt
+Type SHARED:vscsi/soak/mem-end.txt

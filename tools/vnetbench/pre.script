@@ -1,0 +1,17 @@
+; pre.script: the virtionet bench's driver phase, before any stack uses the
+; card: s2test, hold, a 60 s torture with 8 tasks, and leak. Results go to
+; RAM:pre-*.txt; the last lines list every FAIL and every total.
+;   Execute SHARED:vbench/pre.script
+FailAt 30
+Copy SHARED:vbench/#? RAM: QUIET
+Protect RAM:s2test +rwed QUIET
+Protect RAM:netprof +rwed QUIET
+Version RAM:s2test >RAM:pre-version.txt
+RAM:s2test 0 networks/virtionet.device >RAM:pre-s2.txt
+RAM:s2test 0 networks/virtionet.device hold >RAM:pre-hold.txt
+RAM:s2test 0 networks/virtionet.device torture secs=60 kids=8 >RAM:pre-tort.txt
+RAM:s2test 0 networks/virtionet.device leak >RAM:pre-leak.txt
+Echo "== totals"
+Search RAM:pre-s2.txt RAM:pre-hold.txt RAM:pre-tort.txt RAM:pre-leak.txt "passed," NONUM
+Echo "== failures"
+Search RAM:pre-s2.txt RAM:pre-hold.txt RAM:pre-tort.txt RAM:pre-leak.txt "FAIL" NONUM

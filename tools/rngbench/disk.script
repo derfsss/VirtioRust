@@ -1,0 +1,39 @@
+; disk.script: the disk build (KICKZIP=stock boot, virtiorng.device from a
+; RAM: directory added to DEVS:). Three cycles of load, rngread on both
+; units, a 20 s torture on each, expunge, free memory.
+;   Execute SHARED:rbench/disk.script
+FailAt 30
+MakeDir RAM:rbench RAM:rbench/devs >NIL:
+Copy SHARED:rbench/disk/virtiorng.device RAM:rbench/devs/ QUIET
+Copy SHARED:rbench/rngread RAM:rbench/ QUIET
+Protect RAM:rbench/rngread +rwed QUIET
+Assign DEVS: RAM:rbench/devs ADD
+Echo "== cycle 1" >RAM:r-disk.txt
+RAM:rbench/rngread 256 0 >>RAM:r-disk.txt
+RAM:rbench/rngread 256 1 >>RAM:r-disk.txt
+RAM:rbench/rngread TORTURE 20 0 4 >>RAM:r-disk.txt
+RAM:rbench/rngread TORTURE 20 1 4 >>RAM:r-disk.txt
+RAM:rbench/rngread EXPUNGE >>RAM:r-disk.txt
+Avail TOTAL >>RAM:r-disk.txt
+Echo "== cycle 2" >>RAM:r-disk.txt
+RAM:rbench/rngread 256 0 >>RAM:r-disk.txt
+RAM:rbench/rngread 256 1 >>RAM:r-disk.txt
+RAM:rbench/rngread TORTURE 20 0 4 >>RAM:r-disk.txt
+RAM:rbench/rngread TORTURE 20 1 4 >>RAM:r-disk.txt
+RAM:rbench/rngread EXPUNGE >>RAM:r-disk.txt
+Avail TOTAL >>RAM:r-disk.txt
+Echo "== cycle 3" >>RAM:r-disk.txt
+RAM:rbench/rngread 256 0 >>RAM:r-disk.txt
+RAM:rbench/rngread 256 1 >>RAM:r-disk.txt
+RAM:rbench/rngread TORTURE 20 0 4 >>RAM:r-disk.txt
+RAM:rbench/rngread TORTURE 20 1 4 >>RAM:r-disk.txt
+RAM:rbench/rngread EXPUNGE >>RAM:r-disk.txt
+Avail TOTAL >>RAM:r-disk.txt
+Copy RAM:r-disk.txt SHARED:rbench/out/ QUIET
+Echo "== totals"
+Search RAM:r-disk.txt "tests passed" NONUM
+Search RAM:r-disk.txt "torture:" NONUM
+Echo "== free memory after each expunge"
+Search RAM:r-disk.txt "^[0-9]" PATTERN NONUM
+Echo "== failures"
+Search RAM:r-disk.txt "FAIL" NONUM

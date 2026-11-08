@@ -1,0 +1,9 @@
+.key OUT/A
+FailAt 30
+Copy SHARED:bench/netprof RAM: QUIET
+Protect RAM:netprof +rwed QUIET
+Echo "== DH0 512 MB, 1 MB calls" >SHARED:bench/<OUT>
+RAM:netprof disk DH0:np-disk.bin mb=512 >>SHARED:bench/<OUT>
+Echo "== DH0 512 MB, 256 KB calls" >>SHARED:bench/<OUT>
+RAM:netprof disk DH0:np-disk.bin mb=512 buf=256k >>SHARED:bench/<OUT>
+Echo "== done" >>SHARED:bench/<OUT>

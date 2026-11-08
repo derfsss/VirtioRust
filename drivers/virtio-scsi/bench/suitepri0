@@ -1,0 +1,6 @@
+FailAt 30
+ChangeTaskPri 0
+Copy SHARED:vscsi/ctests/test_virtioscsi RAM: QUIET
+Protect RAM:test_virtioscsi +rwed QUIET
+RAM:test_virtioscsi >SHARED:vscsi/ctests/virtioscsi-pri0.out
+Echo "suite done"

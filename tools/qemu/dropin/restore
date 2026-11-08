@@ -1,0 +1,5 @@
+FailAt 21
+Copy LIBS:bsdsocket.library.roadshow LIBS:bsdsocket.library CLONE QUIET
+Copy S:Network-Startup.roadshow S:Network-Startup CLONE QUIET
+Delete ENVARC:RustSocket ALL QUIET
+List LIBS:bsdsocket#? S:Network-Startup#?

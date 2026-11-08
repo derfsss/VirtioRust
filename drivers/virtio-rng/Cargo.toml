@@ -1,0 +1,30 @@
+[package]
+name = "virtio-rng"
+version = "0.1.0"
+edition = "2021"
+autobins = false
+
+[lib]
+name = "virtio_rng"
+crate-type = ["staticlib"]
+path = "src/main.rs"
+
+[profile.dev]
+panic = "abort"
+
+[profile.release]
+panic = "abort"
+opt-level = "s"
+lto = true
+
+[features]
+# Test only: skip the modern interface and use the legacy one, to prove
+# the fallback path on machines where the modern interface works.
+force-legacy = []
+# A build loaded from DEVS: (link with `make DISK=1`): units start at
+# their first open and stop at their last close, and the device can be
+# expunged. Without it: a kickstart module whose units run from boot.
+disk = []
+
+[dependencies]
+amigaos4 = { path = "../../amigaos4", default-features = false, features = ["pci", "timer", "virtio", "device"] }

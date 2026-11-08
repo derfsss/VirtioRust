@@ -1,0 +1,37 @@
+[package]
+name = "virtio-net"
+version = "0.1.0"
+edition = "2021"
+autobins = false
+
+[lib]
+name = "virtio_net"
+crate-type = ["staticlib"]
+path = "src/main.rs"
+
+[profile.dev]
+panic = "abort"
+
+[profile.release]
+panic = "abort"
+opt-level = "s"
+lto = true
+
+[features]
+# Test only: skip the modern interface and use the legacy one.
+force-legacy = []
+# Test only: 4 transmit slots, the device kicked only by the unit task, so
+# writes wait for a slot (the pending path and AbortIO on it).
+test-tx-hold = []
+# Measurement only: no transmit-completion interrupts (slots are taken back
+# by the next write and the 1 s heartbeat), to see which queue raises them.
+test-no-tx-irq = []
+# Measurement only: no interrupts at all; the unit task runs at priority -127
+# and polls the rings whenever nothing else runs (an upper bound on what
+# interrupt handling costs). It starves every task below -127 (netprof's
+# idle meter reads 100% busy), and another TCP/IP stack tested nearly stops
+# under it (0.1 MB/s, cause not found). Roadshow runs normally.
+test-rx-poll = []
+
+[dependencies]
+amigaos4 = { path = "../../amigaos4", default-features = false, features = ["pci", "timer", "virtio", "device", "sana2"] }

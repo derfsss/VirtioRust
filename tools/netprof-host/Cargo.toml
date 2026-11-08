@@ -1,0 +1,12 @@
+[package]
+name = "netprof-host"
+version = "0.1.0"
+edition = "2021"
+description = "The host side of netprof: sends, receives and echoes TCP data for an AmigaOS machine measuring its network path"
+license = "MIT"
+publish = false
+
+[dependencies]
+
+[profile.release]
+opt-level = 3

@@ -1,0 +1,11 @@
+; Roadshow on virtionet.device unit 0 instead of the rtl8139 (run once
+; on a disk set up for the old layout, booted with RTL=1).
+FailAt 21
+MakeDir SYS:Storage/NetInterfaces
+Rename DEVS:NetInterfaces/RTL8139 SYS:Storage/NetInterfaces/RTL8139
+Rename DEVS:NetInterfaces/RTL8139.info SYS:Storage/NetInterfaces/RTL8139.info
+Echo >DEVS:NetInterfaces/VIRTIONET "device=virtionet.device"
+Echo >>DEVS:NetInterfaces/VIRTIONET "unit=0"
+Echo >>DEVS:NetInterfaces/VIRTIONET "configure=dhcp"
+List DEVS:NetInterfaces/ SYS:Storage/NetInterfaces/
+Type DEVS:NetInterfaces/VIRTIONET

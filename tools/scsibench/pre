@@ -1,0 +1,44 @@
+; pre: the scsibench pass on the Kickstart drop-in (boot from
+; kickstart_rustscsi.zip with the five test disks, see tools/scsibench/README).
+; Units: 0 the system disk, 1 t0 (64 MB), 2 t1-4k (4K sectors), 3 t2-3t (3 TB),
+; 4 the empty CD-ROM, 5 t3-fs (256 MB). WRITES UNITS 1-5.
+;   Execute SHARED:sbench/pre
+; Results: SHARED:sbench/out/pre-*.txt
+FailAt 30
+MakeDir SHARED:sbench/out >NIL:
+Copy SHARED:sbench/vscsitest RAM: QUIET
+Copy SHARED:sbench/cu9 RAM: QUIET
+Copy SHARED:sbench/test_virtioscsi RAM: QUIET
+Protect RAM:vscsitest +rwed QUIET
+Protect RAM:cu9 +rwed QUIET
+Protect RAM:test_virtioscsi +rwed QUIET
+Version virtioscsi.device FULL >SHARED:sbench/out/pre-version.txt
+; 1. Every command on every test unit (writes units 1-5).
+RAM:vscsitest virtioscsi.device 6 6 1 >SHARED:sbench/out/pre-vscsitest.txt
+; 2. The system disk through the drop-in: SYS:Libs read, copied to DH0, read back.
+CD SYS:Libs
+C:MD5Sum #? >SHARED:sbench/out/pre-libs.md5
+CD RAM:
+MakeDir DH0:sbench >NIL:
+Copy SYS:Libs DH0:sbench ALL QUIET
+CD DH0:sbench
+C:MD5Sum #? >SHARED:sbench/out/pre-dh0copy.md5
+CD RAM:
+Delete DH0:sbench ALL QUIET FORCE >NIL:
+; 3. The C driver's own suite (with the start-up handshake), units 0 and 1.
+RAM:test_virtioscsi >SHARED:sbench/out/pre-csuite.txt
+; 4. Child processes reading two units at once, and ones that exit at once.
+RAM:cu9 50 0 0 1 2 virtioscsi.device >SHARED:sbench/out/pre-cu9real.txt
+RAM:cu9 50 0 99 99 2 virtioscsi.device >SHARED:sbench/out/pre-cu9quiet.txt
+; 5. Checked random I/O on units 1-3 (no resets on the drop-in).
+RAM:vscsitest TORTURE virtioscsi.device 60 1,2,3 8 >SHARED:sbench/out/pre-torture.txt
+Echo "== results"
+Search SHARED:sbench/out/pre-vscsitest.txt "tests passed" NONUM
+Search SHARED:sbench/out/pre-csuite.txt "finished" NONUM
+Search SHARED:sbench/out/pre-cu9real.txt "rounds ok" NONUM
+Search SHARED:sbench/out/pre-cu9quiet.txt "rounds ok" NONUM
+Search SHARED:sbench/out/pre-torture.txt "torture:" NONUM
+Echo "== failures"
+Search SHARED:sbench/out/pre-vscsitest.txt "FAIL" NONUM
+Search SHARED:sbench/out/pre-torture.txt "FAIL" NONUM
+Echo "pre done" >SHARED:sbench/out/pre.done

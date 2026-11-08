@@ -1,0 +1,30 @@
+.key OUT/A
+; Roadshow 1.15's tools against another stack installed as bsdsocket.library.
+; A stack that logs missing calls to serial names each with the calling task.
+FailAt 30
+Echo "== GetNetStatus" >RAM:sweep.txt
+GetNetStatus <NIL: >>RAM:sweep.txt
+Echo "== ShowNetStatus" >>RAM:sweep.txt
+ShowNetStatus <NIL: >>RAM:sweep.txt
+Echo "== RoadshowControl" >>RAM:sweep.txt
+RoadshowControl GET ip.defttl <NIL: >>RAM:sweep.txt
+Echo "== CheckRoadshowConfig" >>RAM:sweep.txt
+CheckRoadshowConfig <NIL: >>RAM:sweep.txt
+Echo "== ConfigureNetInterface" >>RAM:sweep.txt
+ConfigureNetInterface VIRTIONET <NIL: >>RAM:sweep.txt
+Echo "== AddNetRoute" >>RAM:sweep.txt
+AddNetRoute DST 10.9.9.0 VIA 10.0.3.2 <NIL: >>RAM:sweep.txt
+Echo "== DeleteNetRoute" >>RAM:sweep.txt
+DeleteNetRoute DST 10.9.9.0 <NIL: >>RAM:sweep.txt
+Echo "== ping" >>RAM:sweep.txt
+ping -c 2 10.0.3.2 <NIL: >>RAM:sweep.txt
+Echo "== traceroute" >>RAM:sweep.txt
+traceroute -m 2 -q 1 10.0.3.2 <NIL: >>RAM:sweep.txt
+Echo "== arp" >>RAM:sweep.txt
+arp -a <NIL: >>RAM:sweep.txt
+Echo "== ManageNetInterfaces" >>RAM:sweep.txt
+ManageNetInterfaces <NIL: >>RAM:sweep.txt
+Echo "== RemoveNetInterface (no such interface)" >>RAM:sweep.txt
+RemoveNetInterface NOSUCHIF <NIL: >>RAM:sweep.txt
+Echo "== done" >>RAM:sweep.txt
+Copy RAM:sweep.txt SHARED:dropin/<OUT>

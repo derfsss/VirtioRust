@@ -1,0 +1,77 @@
+virtionet.device beta
+=====================
+
+virtionet.device is a SANA-II network driver for QEMU's virtio-net card
+(virtio-net-pci), for AmigaOS 4.1 Final Edition running in QEMU. It works with
+Roadshow like any other network driver, and is faster than the emulated
+rtl8139 on the AmigaOne machine.
+
+Tested so far (QEMU 11.0.50 on Windows, Roadshow 1.15): the AmigaOne
+(-M amigaone), Pegasos II (-M pegasos2) and Sam460ex (-M sam460ex)
+machines. Other QEMU versions have not been tested: please say which one
+you use. virtio exists only in QEMU: this driver is not for real hardware.
+
+
+1. Give QEMU a virtio-net card
+------------------------------
+Add to your QEMU command line, for example with QEMU's own (user) network:
+
+    -netdev user,id=vnet -device virtio-net-pci,netdev=vnet
+
+On the Sam460ex, put these after the disk options (with the card earlier
+in the PCI order, U-Boot may not boot). If you already use an rtl8139 for
+the network, you can keep it and add the virtio card as a second network.
+
+
+2. Install the driver
+---------------------
+    Copy virtionet.device DEVS:Networks/
+
+Then set up the interface for Roadshow. VIRTIONET in this drawer is an
+example interface file (copy it to DEVS:NetInterfaces/ and edit it, or use
+the Network prefs): with QEMU's user network, the guest is 10.0.2.15, the
+PC/gateway 10.0.2.2, the name server 10.0.2.3 (or use configure=dhcp).
+Reboot, or start it with AddNetInterface. Roadshow cannot remove a running
+interface: to change the driver, reboot.
+
+
+3. Run the check
+----------------
+On the PC, start netprof-host (netprof-host.exe on Windows; it listens on
+TCP port 4500). On a real network your firewall must let it in; with QEMU's
+user network it is reached at the gateway address (10.0.2.2) and the
+firewall does not matter.
+
+On the Amiga, in a Shell, in this drawer:
+
+    Execute vnetcheck HOST 10.0.2.2
+
+It takes about 5 minutes, prints a summary, and writes everything to
+RAM:vnetcheck.txt. Every byte of the transfers is checked. Please send
+RAM:vnetcheck.txt back, whether it passes or not, with:
+  - your QEMU version and command line (the network and machine options),
+  - your host OS,
+  - anything odd you saw (stalls, crashes, a frozen network).
+
+
+4. If something goes wrong
+--------------------------
+The driver writes what it does to the debug output (lines that start
+with "virtionet.device"). To catch them, start QEMU with a serial log,
+for example -serial file:serial.txt, or after the problem run
+DumpDebugBuffer >RAM:debug.txt in a Shell, and send that file too.
+
+
+Known limits
+------------
+- With host_mtu= set below the network back end's MTU (QEMU's user network
+  is 1500), Roadshow throws away the larger frames and stalls. Leave
+  host_mtu unset, or set it to the back end's MTU.
+- On the Pegasos II machine virtio-net is currently a little slower than the
+  rtl8139; on the Sam460ex about the same; on the AmigaOne about twice as
+  fast. Downloads are limited by the emulated CPU.
+- The driver handles up to 4 virtio-net cards (units 0 to 3).
+
+Tools in this drawer: s2test (checks a SANA-II driver directly), netprof
+(measures where the time goes in a transfer; netprof without arguments
+lists its modes), netprof-host (the PC side).

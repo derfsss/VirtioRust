@@ -1,0 +1,34 @@
+; matrix.script: one feature-matrix boot of the virtionet bench.
+; Run in the guest; it copies the bench files from SHARED:vbench/ to RAM:
+;   Execute SHARED:vbench/matrix.script [MTU 1500] [MBIT 1000] [NOSTACK]
+; MTU and MBIT: what the card is set up to report (host_mtu=, speed=).
+; NOSTACK skips the Roadshow transfers (e.g. host_mtu below the QEMU user
+; network's 1500: Roadshow discards the larger frames and stalls).
+; No stack may use the virtio card before it starts (hold needs that).
+.key MTU/K,MBIT/K,NOSTACK/S
+.def MTU 1500
+.def MBIT 1000
+FailAt 30
+Copy SHARED:vbench/#? RAM: QUIET
+Protect RAM:s2test +rwed QUIET
+Protect RAM:netprof +rwed QUIET
+Echo "== s2test"
+RAM:s2test 0 networks/virtionet.device 10.0.3.15 10.0.3.2 mtu=<MTU> mbit=<MBIT> >RAM:m-s2.txt
+Echo "== hold"
+RAM:s2test 0 networks/virtionet.device hold >RAM:m-hold.txt
+Echo "== torture"
+RAM:s2test 0 networks/virtionet.device torture secs=20 kids=4 mtu=<MTU> >RAM:m-tort.txt
+If "<NOSTACK>" EQ ""
+  Echo "== Roadshow"
+  AddNetInterface RAM:VIRTIONET >NIL:
+  RAM:netprof soakrecv 10.0.3.2 secs=20 quiet >RAM:m-recv.txt
+  RAM:netprof soaksend 10.0.3.2 secs=20 quiet >RAM:m-send.txt
+Else
+  Echo "(no stack phase)" >RAM:m-recv.txt
+  Echo "(no stack phase)" >RAM:m-send.txt
+EndIf
+Echo "== results"
+Search RAM:m-s2.txt RAM:m-hold.txt RAM:m-tort.txt "passed," NONUM
+Search RAM:m-recv.txt RAM:m-send.txt "soak" NONUM
+Search RAM:m-s2.txt RAM:m-hold.txt RAM:m-tort.txt RAM:m-recv.txt RAM:m-send.txt "FAIL" NONUM
+Search RAM:m-s2.txt "devicequery:" NONUM

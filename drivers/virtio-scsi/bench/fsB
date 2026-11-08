@@ -1,0 +1,6 @@
+FailAt 30
+Copy SYS:Libs VS4B:libs2 ALL QUIET
+CD VS4B:libs2
+C:MD5Sum #? >SHARED:vscsi/md5-sfs-par.txt
+CD RAM:
+Echo "fsB done" >SHARED:vscsi/fsB.done

@@ -1,0 +1,8 @@
+FailAt 30
+Mount VS4A: FROM SHARED:vscsi/vs4.mountlist
+Mount VS4B: FROM SHARED:vscsi/vs4.mountlist
+Delete VS4A:libs2 VS4B:libs2 ALL QUIET FORCE >NIL:
+CD SYS:
+C:MD5Sum Libs/#? >SHARED:vscsi/md5-libs-src.txt
+CD RAM:
+Echo "mounted"

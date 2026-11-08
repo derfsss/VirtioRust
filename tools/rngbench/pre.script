@@ -1,0 +1,17 @@
+; pre.script: the virtiorng bench's pass on the Kickstart build (boot from
+; kickstart_virtiorng.zip with two cards). rngread's 9 checks on each unit,
+; then a 60 s torture (8 tasks, two rounds) on each unit in turn.
+;   Execute SHARED:rbench/pre.script
+FailAt 30
+Copy SHARED:rbench/rngread RAM: QUIET
+Protect RAM:rngread +rwed QUIET
+RAM:rngread 1024 0 >RAM:r-u0.txt
+RAM:rngread 1024 1 >RAM:r-u1.txt
+RAM:rngread TORTURE 60 0 8 >RAM:r-t0.txt
+RAM:rngread TORTURE 60 1 8 >RAM:r-t1.txt
+Copy RAM:r-#?.txt SHARED:rbench/out/ QUIET
+Echo "== totals"
+Search RAM:r-u0.txt RAM:r-u1.txt "tests passed" NONUM
+Search RAM:r-t0.txt RAM:r-t1.txt "torture:" NONUM
+Echo "== failures"
+Search RAM:r-u0.txt RAM:r-u1.txt RAM:r-t0.txt RAM:r-t1.txt "FAIL" NONUM

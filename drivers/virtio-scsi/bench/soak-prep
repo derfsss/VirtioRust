@@ -1,0 +1,21 @@
+; soak-prep: mount and format the two partitions on unit 4 (after any
+; vscsitest run: it writes to every unit), copy the reference hashes, and
+; record free memory. Then start, as three jobs at once:
+;   Execute SHARED:vscsi/soakfs VS4A ffs 150
+;   Execute SHARED:vscsi/soakfs VS4B sfs 150
+;   Execute SHARED:vscsi/soakraw 100
+FailAt 30
+Copy SHARED:vscsi/vscsitest RAM: QUIET
+Protect RAM:vscsitest +rwed QUIET
+Mount VS4A: FROM SHARED:vscsi/vs4.mountlist
+Mount VS4B: FROM SHARED:vscsi/vs4.mountlist
+Echo "" >RAM:cr
+SYS:System/Format <RAM:cr DRIVE VS4A: NAME FFSTest QUICK NOICONS >NIL:
+SYS:System/Format <RAM:cr DRIVE VS4B: NAME SFSTest QUICK NOICONS >NIL:
+CD SYS:Libs
+C:MD5Sum #? >SHARED:vscsi/soak/src.md5
+CD RAM:
+Avail FLUSH >NIL:
+Avail TOTAL >SHARED:vscsi/soak/mem-start.txt
+Info VS4A:
+Info VS4B:

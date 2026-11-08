@@ -1,0 +1,44 @@
+/* The scsibench filesystems: FFS2 and SFS on the drop-in's unit 5 (the
+   256 MB t3-fs.img, 512-byte blocks, 2048 cylinders of 256 blocks). */
+SBA:
+   Device       = virtioscsi.device
+   Unit         = 5
+   Flags        = 0
+   SectorSize   = 512
+   Surfaces     = 1
+   BlocksPerTrack = 256
+   Reserved     = 2
+   PreAlloc     = 0
+   Interleave   = 0
+   LowCyl       = 1
+   HighCyl      = 1023
+   Buffers      = 100
+   BufMemType   = 0
+   MaxTransfer  = 0x100000
+   Mask         = 0xFFFFFFFE
+   DosType      = 0x444F5307
+   StackSize    = 16384
+   GlobVec      = -1
+   Activate     = 1
+#
+SBB:
+   Device       = virtioscsi.device
+   Unit         = 5
+   Flags        = 0
+   SectorSize   = 512
+   Surfaces     = 1
+   BlocksPerTrack = 256
+   Reserved     = 2
+   PreAlloc     = 0
+   Interleave   = 0
+   LowCyl       = 1024
+   HighCyl      = 2047
+   Buffers      = 100
+   BufMemType   = 0
+   MaxTransfer  = 0x100000
+   Mask         = 0xFFFFFFFE
+   DosType      = 0x53465300
+   StackSize    = 16384
+   GlobVec      = -1
+   Activate     = 1
+#

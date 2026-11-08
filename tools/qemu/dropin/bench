@@ -1,0 +1,18 @@
+.key OUT/A
+; The same steps for whichever stack is bsdsocket.library (unit 0, 10.0.3.15).
+FailAt 30
+Copy SHARED:bench/curl SHARED:bench/netprof RAM: QUIET
+Protect RAM:curl +rwed QUIET
+Protect RAM:netprof +rwed QUIET
+Version bsdsocket.library >SHARED:bench/<OUT>
+Echo "== curl https example.com" >>SHARED:bench/<OUT>
+RAM:curl -s -S -o NIL: -w "%{http_code} %{size_download} verify=%{ssl_verify_result} %{time_total}s*N" https://example.com/ >>SHARED:bench/<OUT>
+Echo "== curl http 16 MB from the PC" >>SHARED:bench/<OUT>
+RAM:curl -s -S -o RAM:big.bin -w "%{http_code} %{size_download} %{speed_download}B/s %{time_total}s*N" http://10.0.3.2:8000/big.bin >>SHARED:bench/<OUT>
+Echo "== curl https 20 MB (speed.cloudflare.com)" >>SHARED:bench/<OUT>
+RAM:curl -s -S -o NIL: -w "%{http_code} %{size_download} %{speed_download}B/s %{time_total}s verify=%{ssl_verify_result}*N" "https://speed.cloudflare.com/__down?bytes=20000000" >>SHARED:bench/<OUT>
+Echo "== netprof 32 MB" >>SHARED:bench/<OUT>
+RAM:netprof recv 10.0.3.2 mb=32 quiet >RAM:np.log
+RAM:netprof send 10.0.3.2 mb=32 quiet >>RAM:np.log
+Search RAM:np.log "Throughput" >>SHARED:bench/<OUT>
+Delete RAM:big.bin QUIET

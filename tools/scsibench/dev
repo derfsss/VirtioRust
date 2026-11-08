@@ -1,0 +1,35 @@
+; dev: the development build vscsirs.device (stock kickstart: the C driver
+; runs the system disk; vscsirs.device takes the test controller, units 0
+; t0, 1 t1-4k, 2 t2-3t, 3 the CD, 4 t3-fs). WRITES UNITS 0-2 and 4.
+; 1. Checked random I/O on units 0-2 WITH a controller reset every 2 s.
+; 2. Ten rounds of vscsitest on units 0-2 then an expunge, free memory after
+;    each (the drop-in cannot expunge: only this build can show it).
+;   Execute SHARED:sbench/dev
+FailAt 30
+MakeDir SHARED:sbench/out >NIL:
+Copy SHARED:sbench/vscsirs.device DEVS: QUIET
+Copy SHARED:sbench/vscsitest RAM: QUIET
+Copy SHARED:sbench/expunge RAM: QUIET
+Protect RAM:vscsitest +rwed QUIET
+Protect RAM:expunge +rwed QUIET
+Version DEVS:vscsirs.device FULL >SHARED:sbench/out/dev-version.txt
+RAM:vscsitest TORTURE vscsirs.device 60 0,1,2 8 >SHARED:sbench/out/dev-torture.txt
+RAM:expunge DEVICE vscsirs.device >NIL:
+Echo "start" >SHARED:sbench/out/dev-expunge.txt
+Set n 0
+Lab round
+RAM:vscsitest vscsirs.device 3 5 >RAM:dv.out
+Search RAM:dv.out "tests passed" NONUM >>SHARED:sbench/out/dev-expunge.txt
+Search RAM:dv.out "FAIL" NONUM >>SHARED:sbench/out/dev-expunge.txt
+RAM:expunge DEVICE vscsirs.device >>SHARED:sbench/out/dev-expunge.txt
+Avail FLUSH >NIL:
+Avail TOTAL >>SHARED:sbench/out/dev-expunge.txt
+Set n `Eval $n + 1`
+If VAL $n LT 10
+  Skip round BACK
+EndIf
+Echo "== results"
+Search SHARED:sbench/out/dev-torture.txt "torture:" NONUM
+Search SHARED:sbench/out/dev-torture.txt "FAIL" NONUM
+Search SHARED:sbench/out/dev-expunge.txt "tests passed" NONUM
+Echo "dev done" >SHARED:sbench/out/dev.done

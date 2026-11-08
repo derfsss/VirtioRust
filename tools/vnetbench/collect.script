@@ -1,0 +1,18 @@
+; collect.script: the summary lines of a soak (soak.script) and the
+; machine's free memory now.
+;   Execute SHARED:vbench/collect.script
+FailAt 30
+Echo "== results"
+Search RAM:soak-recv.txt RAM:soak-send.txt RAM:soak-rtt.txt RAM:soak-faults.txt " soak" NONUM
+Search RAM:soak-faults.txt "faults:" NONUM
+Echo "== rounds"
+Search RAM:soak-recv.txt RAM:soak-send.txt RAM:soak-rtt.txt "rounds " NONUM
+Echo "== memory"
+Search RAM:soak-recv.txt RAM:soak-send.txt RAM:soak-rtt.txt "free memory:" NONUM
+Echo "== driver and stack"
+Search RAM:soak-recv.txt "driver:" NONUM
+Search RAM:soak-recv.txt "interface:" NONUM
+Search RAM:soak-recv.txt "tcp:" NONUM
+Echo "== failed rounds"
+Search RAM:soak-recv.txt RAM:soak-send.txt RAM:soak-rtt.txt "FAILED" NONUM
+Avail

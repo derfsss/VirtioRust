@@ -1,0 +1,34 @@
+[package]
+name = "virtio-scsi"
+version = "0.1.0"
+edition = "2021"
+autobins = false
+
+[lib]
+name = "virtio_scsi"
+crate-type = ["staticlib"]
+path = "src/main.rs"
+
+[profile.dev]
+panic = "abort"
+
+[profile.release]
+panic = "abort"
+opt-level = "s"
+lto = true
+
+[features]
+# The drop-in build: name virtioscsi.device and claim transitional
+# controllers too (pair with make DROPIN=1). Without it the driver is
+# vscsirs.device and claims modern-only controllers (1af4:1048) only, so it
+# never touches the C driver's controller (the first 1af4:1004, unlocked).
+dropin = []
+# Debug: log every read and write (command, offset, length) to serial.
+trace = []
+# Test only: keep controller tasks after the last close, as the drop-in does.
+keep-tasks = []
+# Test only: skip the modern interface and use the legacy one.
+force-legacy = []
+
+[dependencies]
+amigaos4 = { path = "../../amigaos4", default-features = false, features = ["pci", "timer", "virtio", "device"] }

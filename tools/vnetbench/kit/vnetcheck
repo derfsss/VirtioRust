@@ -1,0 +1,36 @@
+; vnetcheck: the virtionet.device beta check. Run it from a Shell in the
+; kit's drawer while netprof-host runs on the PC (see ReadMe):
+;   Execute vnetcheck HOST <PC address> [SECS <seconds>]
+; HOST is the PC as the Amiga sees it (with QEMU's user network, 10.0.2.2).
+; Everything goes to RAM:vnetcheck.txt: send that file back.
+.key HOST/A,SECS/K
+.def SECS 60
+FailAt 30
+Echo "virtionet.device beta check, please wait about 3 minutes"
+Echo "== vnetcheck" >RAM:vnetcheck.txt
+Date >>RAM:vnetcheck.txt
+Version >>RAM:vnetcheck.txt
+Version DEVS:Networks/virtionet.device FULL >>RAM:vnetcheck.txt
+Version bsdsocket.library FULL >>RAM:vnetcheck.txt
+Echo "== netprof info" >>RAM:vnetcheck.txt
+netprof info >>RAM:vnetcheck.txt
+Echo "== driver statistics" >>RAM:vnetcheck.txt
+s2test 0 networks/virtionet.device stats >>RAM:vnetcheck.txt
+Echo "== cpu" >>RAM:vnetcheck.txt
+netprof cpu >>RAM:vnetcheck.txt
+Echo "== round trips" >>RAM:vnetcheck.txt
+netprof rtt <HOST> count=200 >>RAM:vnetcheck.txt
+Echo "== download, every byte checked" >>RAM:vnetcheck.txt
+netprof soakrecv <HOST> secs=<SECS> quiet >>RAM:vnetcheck.txt
+Echo "== upload, every byte checked" >>RAM:vnetcheck.txt
+netprof soaksend <HOST> secs=<SECS> quiet >>RAM:vnetcheck.txt
+Echo "== many short connections" >>RAM:vnetcheck.txt
+netprof soakrtt <HOST> secs=30 quiet >>RAM:vnetcheck.txt
+Echo "== one transfer, measured" >>RAM:vnetcheck.txt
+netprof recv <HOST> mb=32 >>RAM:vnetcheck.txt
+Echo "== summary" >>RAM:vnetcheck.txt
+Search RAM:vnetcheck.txt "PASS " NONUM CASE >RAM:vnetcheck-sum.txt
+Search RAM:vnetcheck.txt "FAIL" NONUM CASE >>RAM:vnetcheck-sum.txt
+Type RAM:vnetcheck-sum.txt >>RAM:vnetcheck.txt
+Type RAM:vnetcheck-sum.txt
+Echo "Done. Please send RAM:vnetcheck.txt."

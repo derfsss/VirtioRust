@@ -1,0 +1,4 @@
+FailAt 30
+Copy SHARED:vscsi/ctests/cu9 RAM:cu9x QUIET
+Protect RAM:cu9x +rwed QUIET
+RAM:cu9x 20 0 0 1 2 virtioscsi.device

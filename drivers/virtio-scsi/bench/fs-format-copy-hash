@@ -1,0 +1,24 @@
+FailAt 30
+Copy SHARED:vscsi/vscsirs.device DEVS: QUIET
+Echo "" >RAM:cr
+Echo "=== mount and format"
+Mount VS4A: FROM SHARED:vscsi/vs4.mountlist
+Mount VS4B: FROM SHARED:vscsi/vs4.mountlist
+SYS:System/Format <RAM:cr DRIVE VS4A: NAME FFSTest QUICK NOICONS
+SYS:System/Format <RAM:cr DRIVE VS4B: NAME SFSTest QUICK NOICONS
+Info VS4A: VS4B:
+Echo "=== copy"
+Copy SYS:C VS4A:c ALL QUIET
+Copy SYS:Libs VS4A:libs ALL QUIET
+Copy SYS:C VS4B:c ALL QUIET
+Copy SYS:Libs VS4B:libs ALL QUIET
+Echo "=== hash"
+CD SYS:
+C:MD5Sum C/#? Libs/#? >SHARED:vscsi/md5-src.txt
+CD VS4A:
+C:MD5Sum c/#? libs/#? >SHARED:vscsi/md5-ffs.txt
+CD VS4B:
+C:MD5Sum c/#? libs/#? >SHARED:vscsi/md5-sfs.txt
+CD RAM:
+Info VS4A: VS4B:
+Echo "s4 done"

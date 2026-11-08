@@ -1,0 +1,21 @@
+; soak.script: the virtionet bench's soak, with Roadshow on the virtio card.
+;   Execute SHARED:vbench/soak.script [SECS 1800] [PERIOD 60]
+; Starts four jobs at once (Run): soakrecv, soaksend and soakrtt against
+; netprof-host at 10.0.3.2, and s2test faults (a device reset every PERIOD
+; seconds). Each writes RAM:soak-*.txt; collect them when all have ended
+; (Status, or the files' last lines). Host side at the same time:
+; tools/vnetbench/qmpchaos.py <QMP port> <SECS> period=120 (link flaps).
+.key SECS/K,PERIOD/K
+.def SECS 1800
+.def PERIOD 60
+FailAt 30
+Copy SHARED:vbench/#? RAM: QUIET
+Protect RAM:s2test +rwed QUIET
+Protect RAM:netprof +rwed QUIET
+AddNetInterface RAM:VIRTIONET >RAM:soak-addnet.txt
+Avail >RAM:soak-mem-start.txt
+Run >NIL: RAM:netprof soakrecv 10.0.3.2 secs=<SECS> quiet >RAM:soak-recv.txt
+Run >NIL: RAM:netprof soaksend 10.0.3.2 secs=<SECS> mb=4 quiet >RAM:soak-send.txt
+Run >NIL: RAM:netprof soakrtt 10.0.3.2 secs=<SECS> quiet >RAM:soak-rtt.txt
+Run >NIL: RAM:s2test 0 networks/virtionet.device faults secs=<SECS> period=<PERIOD> >RAM:soak-faults.txt
+Echo "soak started for <SECS> s"

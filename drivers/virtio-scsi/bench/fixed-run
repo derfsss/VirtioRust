@@ -1,0 +1,18 @@
+; fixed-run: the fixed test programs (start-up handshake) at the calling
+; Shell's priority, on whichever virtioscsi.device the machine booted with (C or
+; Rust), system disk + SYSDISK2 as unit 1. Results to SHARED:vscsi/ctests-fixed/.
+;   Execute SHARED:vscsi/ctests-fixed/run
+FailAt 30
+Copy SHARED:vscsi/ctests-fixed/test_virtioscsi RAM: QUIET
+Copy SHARED:vscsi/ctests-fixed/cu9 RAM: QUIET
+Protect RAM:test_virtioscsi +rwed QUIET
+Protect RAM:cu9 +rwed QUIET
+Version virtioscsi.device FULL >SHARED:vscsi/ctests-fixed/version.out
+RAM:test_virtioscsi >SHARED:vscsi/ctests-fixed/suite1.out
+RAM:test_virtioscsi >SHARED:vscsi/ctests-fixed/suite2.out
+RAM:test_virtioscsi >SHARED:vscsi/ctests-fixed/suite3.out
+RAM:cu9 150 0 0 1 2 virtioscsi.device >SHARED:vscsi/ctests-fixed/cu9real150.out
+CD RAM:
+Wait 3
+RAM:cu9 100 0 99 99 2 virtioscsi.device >SHARED:vscsi/ctests-fixed/cu9quiet100.out
+Echo "done" >SHARED:vscsi/ctests-fixed/done

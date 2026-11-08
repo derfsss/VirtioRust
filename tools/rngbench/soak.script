@@ -1,0 +1,13 @@
+; soak.script [SECS n]: the virtiorng soak on the Kickstart build with two
+; cards: one torture run over both units at once (8 tasks, alternating
+; units; a reset of each card every 1.5 s), two rounds of SECS seconds
+; each (default 900: 30 minutes in all).
+;   Execute SHARED:rbench/soak.script [SECS 900]
+.key SECS/K
+.def SECS 900
+FailAt 30
+Copy SHARED:rbench/rngread RAM: QUIET
+Protect RAM:rngread +rwed QUIET
+RAM:rngread TORTURE <SECS> 0 8 2 >RAM:r-soak.txt
+Copy RAM:r-soak.txt SHARED:rbench/out/ QUIET
+Type RAM:r-soak.txt

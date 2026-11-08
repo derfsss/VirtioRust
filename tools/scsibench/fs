@@ -1,0 +1,27 @@
+; fs: filesystems on the drop-in (unit 5, after pre: it wrote that unit).
+; Mounts SBA: (FFS2) and SBB: (SFS) from sb.mountlist, formats both, copies
+; SYS:C and SYS:Libs to each and hashes the copies. Then start fs-par A and
+; fs-par B as two jobs at once (two Shells), then reboot and run fs-remount.
+;   Execute SHARED:sbench/fs
+FailAt 30
+MakeDir SHARED:sbench/out >NIL:
+Mount SBA: FROM SHARED:sbench/sb.mountlist
+Mount SBB: FROM SHARED:sbench/sb.mountlist
+Echo "" >RAM:cr
+SYS:System/Format <RAM:cr DRIVE SBA: NAME SBFFS QUICK NOICONS
+SYS:System/Format <RAM:cr DRIVE SBB: NAME SBSFS QUICK NOICONS
+CD SYS:
+C:MD5Sum C/#? Libs/#? >SHARED:sbench/out/fs-src.md5
+CD RAM:
+Copy SYS:C SBA:C ALL QUIET
+Copy SYS:Libs SBA:Libs ALL QUIET
+Copy SYS:C SBB:C ALL QUIET
+Copy SYS:Libs SBB:Libs ALL QUIET
+CD SBA:
+C:MD5Sum C/#? Libs/#? >SHARED:sbench/out/fs-ffs.md5
+CD SBB:
+C:MD5Sum C/#? Libs/#? >SHARED:sbench/out/fs-sfs.md5
+CD RAM:
+Info SBA:
+Info SBB:
+Echo "fs done" >SHARED:sbench/out/fs.done

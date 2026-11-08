@@ -1,0 +1,17 @@
+.key SIDE/A
+.bra {
+.ket }
+; fs-par SIDE: one of two writers at once on the drop-in's unit 5 (start
+; "fs-par A" and "fs-par B" as two jobs together, after fs): copies
+; SYS:Libs to SBA: (A, FFS2) or SBB: (B, SFS) and hashes the copy.
+FailAt 30
+If "{SIDE}" EQ "A"
+  Copy SYS:Libs SBA:par ALL QUIET
+  CD SBA:par
+Else
+  Copy SYS:Libs SBB:par ALL QUIET
+  CD SBB:par
+EndIf
+C:MD5Sum #? >SHARED:sbench/out/fs-par{SIDE}.md5
+CD RAM:
+Echo "fs-par {SIDE} done" >SHARED:sbench/out/fs-par{SIDE}.done

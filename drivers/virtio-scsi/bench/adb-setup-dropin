@@ -1,0 +1,6 @@
+FailAt 30
+Mount BC: FROM SHARED:vscsi/adb/bench.mountlist
+Copy SHARED:vscsi/adb/AmigaDiskBench RAM:AmigaDiskBench ALL QUIET
+Protect RAM:AmigaDiskBench/AmigaDiskBench +rwed QUIET
+Info BC:
+Echo "adb ready"

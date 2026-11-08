@@ -1,0 +1,21 @@
+.key FORMAT/S
+.bra {
+.ket }
+; adb-setup: once per boot (stock kickstart, C driver on the system controller,
+; SYSDISK2=bench-c.img SYSDISK2SNAP=off, TESTDISKS=bench-r.img). Loads the Rust
+; dev build from DEVS:, mounts BC: (C) and BR: (Rust), formats both (FORMAT
+; only on the first boot), installs AmigaDiskBench in RAM:.
+FailAt 30
+Copy SHARED:vscsi/adb/vscsirs.device DEVS: QUIET
+Mount BC: FROM SHARED:vscsi/adb/bench.mountlist
+Mount BR: FROM SHARED:vscsi/adb/bench.mountlist
+If "{FORMAT}" EQ "FORMAT"
+  Echo "" >RAM:cr
+  SYS:System/Format <RAM:cr DRIVE BC: NAME BenchC QUICK NOICONS
+  SYS:System/Format <RAM:cr DRIVE BR: NAME BenchR QUICK NOICONS
+EndIf
+Copy SHARED:vscsi/adb/AmigaDiskBench RAM:AmigaDiskBench ALL QUIET
+Protect RAM:AmigaDiskBench/AmigaDiskBench +rwed QUIET
+Info BC:
+Info BR:
+Echo "adb ready"

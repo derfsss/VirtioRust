@@ -1,0 +1,11 @@
+FailAt 30
+Copy SHARED:vscsi/vscsirs.device DEVS: QUIET
+Mount VS4A: FROM SHARED:vscsi/vs4.mountlist
+Mount VS4B: FROM SHARED:vscsi/vs4.mountlist
+Info VS4A: VS4B:
+CD VS4A:
+C:MD5Sum c/#? libs/#? >SHARED:vscsi/md5-ffs2.txt
+CD VS4B:
+C:MD5Sum c/#? libs/#? >SHARED:vscsi/md5-sfs2.txt
+CD RAM:
+Echo "s4b done"

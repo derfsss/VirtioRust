@@ -1,0 +1,8 @@
+; soak-torture: the soak's raw load on the drop-in: checked random I/O on
+; units 1-3, 8 kids at priority -5 (below the remote shells at -2, so the two
+; soak-fs jobs keep running), two rounds of 900 s; then the stop file that
+; ends the soak-fs jobs.
+FailAt 30
+RAM:vscsitest TORTURE virtioscsi.device 900 1,2,3 8 -5 >SHARED:sbench/soak/torture.txt
+Date >SHARED:sbench/soak/end.txt
+Echo "stop" >SHARED:sbench/soak/stop

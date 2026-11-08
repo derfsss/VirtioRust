@@ -1,0 +1,12 @@
+; $VER: Network-Startup 53.2 (01.06.2011)
+; Roadshow's original, plus FailAt so the remote-control daemon (MCPd)
+; starts even when AddNetInterface fails on the stack under test (see sweep).
+FailAt 30
+
+AddNetInterface QUIET DEVS:NetInterfaces/~(#?.info)
+
+; Add below this line applications that need a running network
+
+
+; MCPd - Model Context Protocol daemon
+Run >NIL: <NIL: SYS:System/MCPd/MCPd

@@ -1,0 +1,36 @@
+FailAt 30
+Avail FLUSH >NIL:
+Avail TOTAL >SHARED:sbench/soak/iso-1.txt
+RAM:vscsitest TORTURE virtioscsi.device 60 1,2,3 8 >SHARED:sbench/soak/iso-torture.txt
+Avail FLUSH >NIL:
+Avail TOTAL >SHARED:sbench/soak/iso-2.txt
+Set n 0
+Lab round
+Copy SYS:Libs SBB:iso ALL QUIET
+Delete SBB:iso ALL QUIET FORCE >NIL:
+Copy SYS:Libs SBA:iso ALL QUIET
+Delete SBA:iso ALL QUIET FORCE >NIL:
+Set n `Eval $n + 1`
+If VAL $n LT 40
+  Skip round BACK
+EndIf
+Avail FLUSH >NIL:
+Avail TOTAL >SHARED:sbench/soak/iso-3.txt
+Set n 0
+Lab round2
+Copy SYS:Libs SBB:iso ALL QUIET
+Delete SBB:iso ALL QUIET FORCE >NIL:
+Copy SYS:Libs SBA:iso ALL QUIET
+Delete SBA:iso ALL QUIET FORCE >NIL:
+Set n `Eval $n + 1`
+If VAL $n LT 40
+  Skip round2 BACK
+EndIf
+Avail FLUSH >NIL:
+Avail TOTAL >SHARED:sbench/soak/iso-4.txt
+Type SHARED:sbench/soak/iso-1.txt
+Type SHARED:sbench/soak/iso-2.txt
+Type SHARED:sbench/soak/iso-3.txt
+Type SHARED:sbench/soak/iso-4.txt
+Search SHARED:sbench/soak/iso-torture.txt "torture:" NONUM
+Search SHARED:sbench/soak/iso-torture.txt "memory" NONUM

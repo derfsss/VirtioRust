@@ -1,0 +1,26 @@
+; kick-check: after a boot from a kickstart with the Rust
+; virtioscsi.device in place of the C one, on a copy of the system disk.
+; Unit 0 is the system disk: vscsitest runs on units 1-5 only.
+FailAt 30
+MakeDir SHARED:vscsi/kick >NIL:
+Version virtioscsi.device FULL >SHARED:vscsi/kick/version.txt
+Type SHARED:vscsi/kick/version.txt
+; Reads from the system disk through the Rust driver.
+CD SYS:Libs
+C:MD5Sum #? >SHARED:vscsi/kick/libs.md5
+CD RAM:
+; Writes to the system disk (the copy), read back.
+MakeDir DH0:rusttest >NIL:
+Copy SYS:Libs DH0:rusttest ALL QUIET
+CD DH0:rusttest
+C:MD5Sum #? >SHARED:vscsi/kick/dh0copy.md5
+CD RAM:
+Delete DH0:rusttest ALL QUIET FORCE >NIL:
+; The test units.
+Copy SHARED:vscsi/dropin/vscsitest RAM: QUIET
+Protect RAM:vscsitest +rwed QUIET
+RAM:vscsitest virtioscsi.device 6 6 1 >SHARED:vscsi/kick/vscsitest.txt
+Search SHARED:vscsi/kick/vscsitest.txt "tests passed"
+Search SHARED:vscsi/kick/vscsitest.txt FAIL
+Info DH0:
+Echo "kick-check done"
