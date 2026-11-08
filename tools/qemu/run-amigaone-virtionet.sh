@@ -39,6 +39,10 @@ case "${STACK:-roadshow}" in
   rustsocket) NAME=base_a1_rs;    DISK=hd0-vnet-rs.qcow2; MCPD=4425; QMP=14425; P0=4620; P1=4610; P2=4630; L4=12361; R4=12360; MAC4=52:54:00:12:34:6b ;;
   *) echo "STACK must be roadshow or rustsocket"; exit 2 ;;
 esac
+# DISK=<file> boots another disk in the same machine folder under this
+# machine's name and ports (the driver comparison machines in
+# tools/vnetbench/boot.sh: cmp-rtl, cmp-e1000e).
+DISK="${DISK_OVERRIDE:-$DISK}"
 if [ "${RTL:-}" = 1 ] && [ "$NAME" != base_a1_backup ]; then echo "RTL=1 is for the Roadshow machine only"; exit 2; fi
 LOG="${1:?log path}"
 VNETDEV="${2:-virtio-net-pci,netdev=vnet,mac=52:54:00:12:34:57}"
