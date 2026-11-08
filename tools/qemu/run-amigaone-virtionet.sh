@@ -66,9 +66,13 @@ fi
 # between 127.0.0.1 ports 12360 and 12361; no slirp, no DHCP: 10.0.6.0/24,
 # addresses set by hand), for one machine routing for the other (IP
 # forwarding).
+# VNET4=e1000e puts an Intel 82574L there instead (jumbo frame tests between
+# the two machines: the dgram link carries frames of any size).
 VNET4ARGS=()
-if [ "${VNET4:-}" = 1 ]; then
-  VNET4ARGS=(-netdev "dgram,id=vnet4,local.type=inet,local.host=127.0.0.1,local.port=$L4,remote.type=inet,remote.host=127.0.0.1,remote.port=$R4" -device "virtio-net-pci,netdev=vnet4,mac=$MAC4,addr=0x0b")
+if [ -n "${VNET4:-}" ]; then
+  V4DEV="virtio-net-pci,netdev=vnet4,mac=$MAC4,addr=0x0b"
+  [ "$VNET4" = e1000e ] && V4DEV="e1000e,netdev=vnet4,mac=$MAC4,addr=0x0b"
+  VNET4ARGS=(-netdev "dgram,id=vnet4,local.type=inet,local.host=127.0.0.1,local.port=$L4,remote.type=inet,remote.host=127.0.0.1,remote.port=$R4" -device "$V4DEV")
 fi
 RTLARGS=()
 MCPDFWD="hostfwd=tcp::$MCPD-10.0.3.15:4322,hostfwd=udp::$MCPD-10.0.3.15:4323"
