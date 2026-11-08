@@ -1,0 +1,70 @@
+virtioscsi.device beta (Rust)
+=============================
+
+virtioscsi.device is a block device driver for QEMU's virtio-scsi
+controller (virtio-scsi-pci and virtio-scsi-pci-non-transitional), for
+AmigaOS 4.1 Final Edition running in QEMU. It is a drop-in replacement
+for the C virtioscsi.device (VirtualSCSIDevice), written in Rust: the
+same name, loaded from the Kickstart, booting the system disk.
+
+It scans targets 0-7 and LUNs 0-7 on each controller, answers the
+trackdisk, TD64 and NSD commands, HD_SCSICMD, geometry and disk-change
+requests, and keeps up to 16 commands in flight per controller. On QEMU's
+AmigaOne, SFS ran 2.3 to 23 times as fast as with the C driver (most on
+random 4 KB reads and writes).
+
+virtio exists only in QEMU: this driver is not for real hardware.
+Tested on QEMU 11.0.50's AmigaOne machine (-M amigaone), as the driver
+of the system disk.
+
+
+1. Back up first
+----------------
+This driver runs your system disk. Keep a copy of your kickstart (zip
+or folder) and of your disk image before you start, so that you can go
+back if the machine does not boot.
+
+
+2. Install
+----------
+virtioscsi.device replaces the module of the same name in the Kickstart
+folder your boot loader uses:
+
+    Kickstart/virtioscsi.device
+
+- AmigaOS boot loader: copy it over SYS:Kickstart/virtioscsi.device
+  (rename the old one first, e.g. to virtioscsi.device.c).
+- QEMU with bboot: the Kickstart folder is inside the kickstart zip you
+  give QEMU. Unpack the zip, replace Kickstart/virtioscsi.device, and
+  zip it again (keep every other entry as it was).
+
+If your Kicklayout has no line for it yet, add, inside the configuration
+you boot (before the blank line that ends it):
+
+    MODULE Kickstart/virtioscsi.device
+
+Reboot. Version virtioscsi.device FULL shows 1.2 when it is the Rust
+driver.
+
+
+3. Going back
+-------------
+Put the old Kickstart/virtioscsi.device (or your saved kickstart zip)
+back and reboot.
+
+
+4. If something goes wrong
+--------------------------
+The driver reports what it does on the debug output, in lines that
+start with "virtioscsi.device". After a problem, in a Shell:
+
+    DumpDebugBuffer >RAM:debug.txt
+
+and report it with your QEMU version and command line (the controller
+and disk options).
+
+
+Source: https://github.com/derfsss/VirtioRust (MIT licence). The C driver
+it replaces: https://github.com/derfsss/VirtualSCSIDevice
+
+Richard Gibbs -- rich_gibbs@hotmail.com

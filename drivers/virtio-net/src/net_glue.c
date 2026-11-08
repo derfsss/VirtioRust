@@ -24,9 +24,9 @@
 
 #define DEVNAME    "virtionet.device"
 #define DEVVER     1
-#define DEVREV     0
+#define DEVREV     1
 #define DEVPRI     0
-#define VSTRING    "virtionet.device 1.0 (04.11.2026)"
+#define VSTRING    "virtionet.device 1.1 (08.11.2026)"
 
 /* Read by the amigaos4 crate (sys::IExec, sys::IPCI, sys::IUtility). */
 struct ExecIFace    *IExec    = NULL;

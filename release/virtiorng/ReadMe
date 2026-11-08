@@ -1,0 +1,77 @@
+virtiorng.device beta
+=====================
+
+virtiorng.device is an entropy (random number) device for QEMU's
+virtio-rng card (virtio-rng-pci), for AmigaOS 4.1 Final Edition running
+in QEMU. A program opens it and reads random bytes with CMD_READ; the
+bytes come from the host's random source.
+
+virtio exists only in QEMU: this driver is not for real hardware.
+Tested with QEMU 11.0.50 on the AmigaOne (-M amigaone), Pegasos II
+(-M pegasos2) and Sam460ex (-M sam460ex) machines.
+
+This archive holds two builds of the same driver. Use one of them.
+
+  Kickstart/virtiorng.device   1.1, a Kickstart module, started at boot
+  DEVS/virtiorng.device        1.2, loaded from DEVS: when first opened,
+                               unloaded when no longer used
+  rngread                      a Shell tool that checks the device
+
+
+1. Give QEMU a virtio-rng card
+------------------------------
+Add to your QEMU command line:
+
+    -device virtio-rng-pci
+
+Up to four cards work; each is a unit (0 to 3), in the order found.
+
+
+2a. Install the disk build (simplest)
+-------------------------------------
+    Copy DEVS/virtiorng.device DEVS:
+
+Programs open "virtiorng.device", unit 0.
+
+
+2b. Or install the Kickstart build
+----------------------------------
+Copy Kickstart/virtiorng.device into the Kickstart folder your boot
+loader uses, and add this line to its Kicklayout file, inside the
+configuration you boot (before the blank line that ends it):
+
+    MODULE Kickstart/virtiorng.device
+
+When booting QEMU with bboot, that folder and Kicklayout are inside the
+kickstart zip you pass to QEMU: unpack it, add the module and the line,
+and zip it again. At boot the driver checks itself and prints
+"virtiorng.device: self-test PASSED" on the serial output.
+
+Do not install both builds.
+
+
+3. Check it
+-----------
+In a Shell, in this drawer:
+
+    rngread
+
+It runs nine checks (reads, aborts, flushes, recovery after a device
+reset, an odd-sized read into an odd address) and prints one line for
+each; the return code is 0 when all pass. "rngread 4096 1" reads 4 MB
+from unit 1.
+
+
+4. If something goes wrong
+--------------------------
+The driver reports what it does on the debug output, in lines that
+start with "virtiorng.device". After a problem, in a Shell:
+
+    DumpDebugBuffer >RAM:debug.txt
+
+and report it with your QEMU version and command line.
+
+
+Source: https://github.com/derfsss/VirtioRust (MIT licence)
+
+Richard Gibbs -- rich_gibbs@hotmail.com

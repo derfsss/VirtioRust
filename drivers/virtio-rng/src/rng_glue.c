@@ -32,9 +32,9 @@
 
 #define DEVNAME    "virtiorng.device"
 #define DEVVER     1
-#define DEVREV     0
+#define DEVREV     1
 #define DEVPRI     0
-#define VSTRING    "virtiorng.device 1.0 (03.11.2026)"
+#define VSTRING    "virtiorng.device 1.1 (08.11.2026)"
 #define AFTERPRI   -100
 
 /* Read by the amigaos4 crate (sys::IExec, sys::IPCI). */

@@ -10,11 +10,13 @@ LOG="${1:?log path}"
 # The rng devices, word-split on purpose (default: one transitional card),
 # e.g. "-device virtio-rng-pci -device virtio-rng-pci-non-transitional".
 RNGDEVS="${2:--device virtio-rng-pci}"
-# The kickstart: the copy with virtiorng.device in it, or (KICKZIP=stock)
-# the machine's own, for the disk build loaded from DEVS:.
+# The kickstart: the copy with virtiorng.device in it, (KICKZIP=stock) the
+# machine's own, for the disk build loaded from DEVS:, or KICKZIP=<zip>
+# another kickstart zip.
 case "${KICKZIP:-virtiorng}" in
-  stock) KICK="$MACHINES\base_a1_backup\kickstart.zip" ;;
-  *)     KICK="$MACHINES\base_a1_backup\kickstart_virtiorng.zip" ;;
+  stock)     KICK="$MACHINES\base_a1_backup\kickstart.zip" ;;
+  virtiorng) KICK="$MACHINES\base_a1_backup\kickstart_virtiorng.zip" ;;
+  *)         KICK="$KICKZIP" ;;
 esac
 exec "$QEMU" \
   -M amigaone \

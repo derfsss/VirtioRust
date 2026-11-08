@@ -37,15 +37,15 @@
 #define DEVNAME    "vscsirs.device"
 #endif
 /* lib_Version, rt_Version and the IdString must agree (SFS checks
- * lib_Version against the IdString). The Kickstart drop-in is 1.1; the
+ * lib_Version against the IdString). The Kickstart drop-in is 1.2; the
  * development build keeps the C driver's 53.x line. */
 #ifdef DROPIN
 #define DEVVER     1
-#define DEVREV     1
-#define VSTRING    DEVNAME " 1.1 (05.11.2026)"
+#define DEVREV     2
+#define VSTRING    DEVNAME " 1.2 (08.11.2026)"
 #else
 #define DEVVER     53
-#define DEVREV     0
+#define DEVREV     1
 #define VSTRING    DEVNAME " 53.1 (04.11.2026)"
 #endif
 #define DEVPRI     0
