@@ -17,19 +17,6 @@ R="$(cd "$(dirname "$0")/../.." && pwd)"
 case "$M" in
   amigaone) S=run-amigaone-virtionet.sh; NAME=base_a1_backup; PORT=4423; export STACK=roadshow ;;
   amigaone-rs) S=run-amigaone-virtionet.sh; NAME=base_a1_rs; PORT=4425; export STACK=rustsocket ;;
-  # Driver comparison, both on Roadshow (copies of the Roadshow disk), MCPd
-  # on virtio unit 0 as usual, the card under test in the second slot
-  # (10.0.4.0/24, Roadshow interface TESTNIC): the rtl8139 under the
-  # Roadshow machine's name and ports, the Intel 82574L (e1000e.device)
-  # under the second machine's. Both may run at once.
-  cmp-rtl) S=run-amigaone-virtionet.sh; NAME=base_a1_backup; PORT=4423; export STACK=roadshow DISK_OVERRIDE=hd0-cmp-rtl.qcow2 VNET2="rtl8139,netdev=vnet2,mac=52:54:00:12:34:61,addr=0x0c" ;;
-  cmp-e1000e) S=run-amigaone-virtionet.sh; NAME=base_a1_rs; PORT=4425; export STACK=rustsocket DISK_OVERRIDE=hd0-cmp-e1000e.qcow2 VNET2="e1000e,netdev=vnet2,mac=52:54:00:12:34:60,addr=0x0c" ;;
-  # rustsocket (as bsdsocket.library) on a copy of the rustsocket disk, the
-  # e1000e as interface TESTNIC beside virtio unit 0: rustsocket on the
-  # two drivers in one boot. Same name and ports as cmp-e1000e and
-  # amigaone-rs (rustsocket on virtio alone), so only one of the three runs
-  # at a time; any of them can run beside a Roadshow machine.
-  cmp-e1000e-rs) S=run-amigaone-virtionet.sh; NAME=base_a1_rs; PORT=4425; export STACK=rustsocket DISK_OVERRIDE=hd0-cmp-e1000e-rs.qcow2 VNET2="e1000e,netdev=vnet2,mac=52:54:00:12:34:60,addr=0x0c" ;;
   vscsi)    S=run-amigaone-vscsi.sh;    NAME=base_a1_backup; PORT=4423 ;;
   virtiorng) S=run-amigaone-virtiorng.sh; NAME=base_a1_backup; PORT=4423 ;;
   pegasos2) S=run-pegasos2-virtionet.sh; NAME=mcpd-peg2-upd3; PORT=4432 ;;
@@ -37,7 +24,7 @@ case "$M" in
   *) echo "unknown machine $M"; exit 2 ;;
 esac
 mine() {
-  powershell -NoProfile -Command "@(Get-CimInstance Win32_Process -Filter \"Name like 'qemu-system-ppc%'\" | Where-Object { \$_.CommandLine -match '-name $NAME' }).Count"
+  powershell -NoProfile -Command "@(Get-CimInstance Win32_Process -Filter \"Name='qemu-system-ppc.exe'\" | Where-Object { \$_.CommandLine -match '-name $NAME' }).Count"
 }
 # Never quit a running machine from here: a QMP quit does not let the
 # guest's filesystems write out, and a file copied just before is lost.

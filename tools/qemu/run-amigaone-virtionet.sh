@@ -35,14 +35,10 @@
 # copy local.env.example there and edit it.
 . "$(dirname "$0")/local.env" 2>/dev/null || { echo "tools/qemu/local.env is missing: copy local.env.example and set the paths" >&2; exit 1; }
 case "${STACK:-roadshow}" in
-  roadshow)  NAME=base_a1_backup; DISK=hd0-vnet.qcow2;    MCPD=4423; QMP=14423; P0=4520; P1=4510; P2=4530; L4=12360; R4=12361; MAC4=52:54:00:12:34:6a; L5=12362; R5=12363; MAC5=52:54:00:12:34:7a ;;
-  rustsocket) NAME=base_a1_rs;    DISK=hd0-vnet-rs.qcow2; MCPD=4425; QMP=14425; P0=4620; P1=4610; P2=4630; L4=12361; R4=12360; MAC4=52:54:00:12:34:6b; L5=12363; R5=12362; MAC5=52:54:00:12:34:7b ;;
+  roadshow)  NAME=base_a1_backup; DISK=hd0-vnet.qcow2;    MCPD=4423; QMP=14423; P0=4520; P1=4510; P2=4530; L4=12360; R4=12361; MAC4=52:54:00:12:34:6a; ;;
+  rustsocket) NAME=base_a1_rs;    DISK=hd0-vnet-rs.qcow2; MCPD=4425; QMP=14425; P0=4620; P1=4610; P2=4630; L4=12361; R4=12360; MAC4=52:54:00:12:34:6b; ;;
   *) echo "STACK must be roadshow or rustsocket"; exit 2 ;;
 esac
-# DISK=<file> boots another disk in the same machine folder under this
-# machine's name and ports (the driver comparison machines in
-# tools/vnetbench/boot.sh: cmp-rtl, cmp-e1000e).
-DISK="${DISK_OVERRIDE:-$DISK}"
 if [ "${RTL:-}" = 1 ] && [ "$NAME" != base_a1_backup ]; then echo "RTL=1 is for the Roadshow machine only"; exit 2; fi
 LOG="${1:?log path}"
 VNETDEV="${2:-virtio-net-pci,netdev=vnet,mac=52:54:00:12:34:57}"
@@ -55,33 +51,16 @@ if [ "${NOVNET2:-}" != 1 ]; then
   VNET2ARGS=(-netdev "user,id=vnet2,net=10.0.4.0/24,dhcpstart=10.0.4.15,hostfwd=tcp:127.0.0.1:$P1-10.0.4.15:4510,hostfwd=udp:127.0.0.1:$((P1+1))-10.0.4.15:4511" -device "${VNET2:-virtio-net-pci,netdev=vnet2,mac=52:54:00:12:34:58,addr=0x0c}")
 fi
 VNET3ARGS=()
-# VNET3=<device options> instead of 1 puts another card there (an e1000e
-# for a two-card driver test).
-if [ -n "${VNET3:-}" ]; then
-  V3DEV='virtio-net-pci,netdev=vnet3,mac=52:54:00:12:34:59,addr=0x0d'
-  [ "$VNET3" != 1 ] && V3DEV="$VNET3"
-  VNET3ARGS=(-netdev "user,id=vnet3,net=10.0.5.0/24,dhcpstart=10.0.5.15,hostfwd=tcp:127.0.0.1:$P2-10.0.5.15:4510,hostfwd=udp:127.0.0.1:$((P2+1))-10.0.5.15:4511" -device "$V3DEV")
+if [ "${VNET3:-}" = 1 ]; then
+  VNET3ARGS=(-netdev "user,id=vnet3,net=10.0.5.0/24,dhcpstart=10.0.5.15,hostfwd=tcp:127.0.0.1:$P2-10.0.5.15:4510,hostfwd=udp:127.0.0.1:$((P2+1))-10.0.5.15:4511" -device virtio-net-pci,netdev=vnet3,mac=52:54:00:12:34:59,addr=0x0d)
 fi
 # VNET4=1 adds a card on a segment the two machines share (a dgram netdev
 # between 127.0.0.1 ports 12360 and 12361; no slirp, no DHCP: 10.0.6.0/24,
 # addresses set by hand), for one machine routing for the other (IP
 # forwarding).
-# VNET4=e1000e puts an Intel 82574L there instead (jumbo frame tests between
-# the two machines: the dgram link carries frames of any size).
 VNET4ARGS=()
-if [ -n "${VNET4:-}" ]; then
-  V4DEV="virtio-net-pci,netdev=vnet4,mac=$MAC4,addr=0x0b"
-  [ "$VNET4" = e1000e ] && V4DEV="e1000e,netdev=vnet4,mac=$MAC4,addr=0x0b"
-  VNET4ARGS=(-netdev "dgram,id=vnet4,local.type=inet,local.host=127.0.0.1,local.port=$L4,remote.type=inet,remote.host=127.0.0.1,remote.port=$R4" -device "$V4DEV")
-fi
-# VNET5=e1000e (or 1 for virtio) adds a second segment the two machines
-# share (dgram, 127.0.0.1 ports 12362/12363, slot 0x0e; addresses by
-# hand), e.g. two e1000e units side by side at different MTUs.
-VNET5ARGS=()
-if [ -n "${VNET5:-}" ]; then
-  V5DEV="virtio-net-pci,netdev=vnet5,mac=$MAC5,addr=0x0e"
-  [ "$VNET5" = e1000e ] && V5DEV="e1000e,netdev=vnet5,mac=$MAC5,addr=0x0e"
-  VNET5ARGS=(-netdev "dgram,id=vnet5,local.type=inet,local.host=127.0.0.1,local.port=$L5,remote.type=inet,remote.host=127.0.0.1,remote.port=$R5" -device "$V5DEV")
+if [ "${VNET4:-}" = 1 ]; then
+  VNET4ARGS=(-netdev "dgram,id=vnet4,local.type=inet,local.host=127.0.0.1,local.port=$L4,remote.type=inet,remote.host=127.0.0.1,remote.port=$R4" -device "virtio-net-pci,netdev=vnet4,mac=$MAC4,addr=0x0b")
 fi
 RTLARGS=()
 MCPDFWD="hostfwd=tcp::$MCPD-10.0.3.15:4322,hostfwd=udp::$MCPD-10.0.3.15:4323"
@@ -101,7 +80,6 @@ exec "$QEMU" \
   "${VNET2ARGS[@]}" \
   "${VNET3ARGS[@]}" \
   "${VNET4ARGS[@]}" \
-  "${VNET5ARGS[@]}" \
   -append 'serial debuglevel=1' \
   -display sdl,gl=off,show-cursor=off,full-screen=off \
   -device es1370,addr=0x09 -name "$NAME" \
