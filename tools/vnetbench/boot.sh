@@ -37,7 +37,7 @@ case "$M" in
   *) echo "unknown machine $M"; exit 2 ;;
 esac
 mine() {
-  powershell -NoProfile -Command "@(Get-CimInstance Win32_Process -Filter \"Name='qemu-system-ppc.exe'\" | Where-Object { \$_.CommandLine -match '-name $NAME' }).Count"
+  powershell -NoProfile -Command "@(Get-CimInstance Win32_Process -Filter \"Name like 'qemu-system-ppc%'\" | Where-Object { \$_.CommandLine -match '-name $NAME' }).Count"
 }
 # Never quit a running machine from here: a QMP quit does not let the
 # guest's filesystems write out, and a file copied just before is lost.
