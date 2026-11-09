@@ -123,6 +123,10 @@ static HOOK_METHODS: [Tag; 3] = [S2_COPY_TO_BUFF, S2_COPY_FROM_BUFF, sys::TAG_DO
 struct Req {
     r: S2Req,
     buf: alloc::boxed::Box<Buf>,
+    /// False from `send` until `wait` sees the request back: a request
+    /// that timed out may still be replied later, onto our port, and must
+    /// not be deleted while it is queued in the driver or on the port.
+    back: core::cell::Cell<bool>,
 }
 
 impl Req {
@@ -173,7 +177,7 @@ impl Ctx {
         unsafe {
             let ior = sys::exec_create_iorequest(self.port.as_ptr(), 88);
             let r = S2Req::from_raw(ior)?;
-            Some(Req { r, buf: alloc::boxed::Box::new(Buf { len: 0, data: [0; BUF_CAP] }) })
+            Some(Req { r, buf: alloc::boxed::Box::new(Buf { len: 0, data: [0; BUF_CAP] }), back: core::cell::Cell::new(true) })
         }
     }
 
@@ -210,8 +214,21 @@ impl Ctx {
     /// Start a request with its io_Flags as set (BeginIO: SendIO would
     /// clear them, and SANA2IOF_RAW with them).
     fn send(&self, req: &Req) {
+        req.back.set(false);
         // SAFETY: an opened request.
         unsafe { sys::exec_begin_io(req.r.as_ptr()) };
+    }
+
+    /// Make a sent request safe to delete: abort it if it never came back
+    /// and wait for it (2 s). False: it is still out, and must be leaked
+    /// rather than deleted.
+    fn retire(&mut self, req: &Req) -> bool {
+        if !req.back.get() {
+            // SAFETY: a sent request.
+            unsafe { sys::exec_abort_io(req.r.as_ptr()) };
+            let _ = self.wait(req, 2000);
+        }
+        req.back.get()
     }
 
     /// Wait for a sent request, at most `ms`. None: it did not come back.
@@ -223,6 +240,7 @@ impl Ctx {
                 if !sys::exec_check_io(req.r.as_ptr()).is_null() {
                     self.timer.abort();
                     sys::exec_wait_io(req.r.as_ptr());
+                    req.back.set(true);
                     return Some((req.r.io().error(), req.r.wire_error()));
                 }
                 sys::exec_wait(self.port.signal_mask() | self.timer.signal_mask());
@@ -719,8 +737,14 @@ fn run(ctx: &mut Ctx, my_ip: [u8; 4], gw_ip: [u8; 4], want_mtu: u32, want_bps: u
     }
 
     for r in [ev, ev2, ra, rb, orph, rb2, ri, sample, rx, rp, evo, ra3, ri2, ra4] {
-        // SAFETY: requests that came back.
-        unsafe { sys::exec_delete_iorequest(r.r.as_ptr()) };
+        // After a failed check a request may still be out (in the driver,
+        // or replied later onto our port): abort and collect it first.
+        if ctx.retire(&r) {
+            // SAFETY: a request that came back.
+            unsafe { sys::exec_delete_iorequest(r.r.as_ptr()) };
+        } else {
+            say!("s2test: a request never came back; left allocated");
+        }
     }
     ctx.close(b);
     ctx.close(a);
