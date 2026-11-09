@@ -35,8 +35,8 @@
 # copy local.env.example there and edit it.
 . "$(dirname "$0")/local.env" 2>/dev/null || { echo "tools/qemu/local.env is missing: copy local.env.example and set the paths" >&2; exit 1; }
 case "${STACK:-roadshow}" in
-  roadshow)  NAME=base_a1_backup; DISK=hd0-vnet.qcow2;    MCPD=4423; QMP=14423; P0=4520; P1=4510; P2=4530; L4=12360; R4=12361; MAC4=52:54:00:12:34:6a ;;
-  rustsocket) NAME=base_a1_rs;    DISK=hd0-vnet-rs.qcow2; MCPD=4425; QMP=14425; P0=4620; P1=4610; P2=4630; L4=12361; R4=12360; MAC4=52:54:00:12:34:6b ;;
+  roadshow)  NAME=base_a1_backup; DISK=hd0-vnet.qcow2;    MCPD=4423; QMP=14423; P0=4520; P1=4510; P2=4530; L4=12360; R4=12361; MAC4=52:54:00:12:34:6a; L5=12362; R5=12363; MAC5=52:54:00:12:34:7a ;;
+  rustsocket) NAME=base_a1_rs;    DISK=hd0-vnet-rs.qcow2; MCPD=4425; QMP=14425; P0=4620; P1=4610; P2=4630; L4=12361; R4=12360; MAC4=52:54:00:12:34:6b; L5=12363; R5=12362; MAC5=52:54:00:12:34:7b ;;
   *) echo "STACK must be roadshow or rustsocket"; exit 2 ;;
 esac
 # DISK=<file> boots another disk in the same machine folder under this
@@ -74,6 +74,15 @@ if [ -n "${VNET4:-}" ]; then
   [ "$VNET4" = e1000e ] && V4DEV="e1000e,netdev=vnet4,mac=$MAC4,addr=0x0b"
   VNET4ARGS=(-netdev "dgram,id=vnet4,local.type=inet,local.host=127.0.0.1,local.port=$L4,remote.type=inet,remote.host=127.0.0.1,remote.port=$R4" -device "$V4DEV")
 fi
+# VNET5=e1000e (or 1 for virtio) adds a second segment the two machines
+# share (dgram, 127.0.0.1 ports 12362/12363, slot 0x0e; addresses by
+# hand), e.g. two e1000e units side by side at different MTUs.
+VNET5ARGS=()
+if [ -n "${VNET5:-}" ]; then
+  V5DEV="virtio-net-pci,netdev=vnet5,mac=$MAC5,addr=0x0e"
+  [ "$VNET5" = e1000e ] && V5DEV="e1000e,netdev=vnet5,mac=$MAC5,addr=0x0e"
+  VNET5ARGS=(-netdev "dgram,id=vnet5,local.type=inet,local.host=127.0.0.1,local.port=$L5,remote.type=inet,remote.host=127.0.0.1,remote.port=$R5" -device "$V5DEV")
+fi
 RTLARGS=()
 MCPDFWD="hostfwd=tcp::$MCPD-10.0.3.15:4322,hostfwd=udp::$MCPD-10.0.3.15:4323"
 if [ "${RTL:-}" = 1 ]; then
@@ -92,6 +101,7 @@ exec "$QEMU" \
   "${VNET2ARGS[@]}" \
   "${VNET3ARGS[@]}" \
   "${VNET4ARGS[@]}" \
+  "${VNET5ARGS[@]}" \
   -append 'serial debuglevel=1' \
   -display sdl,gl=off,show-cursor=off,full-screen=off \
   -device es1370,addr=0x09 -name "$NAME" \

@@ -10,6 +10,8 @@
 //!   netprof info
 //!   netprof cpu
 //!   netprof burn [s=N]   (spin N seconds at the caller's priority)
+//!   netprof serve [port=N] [count=N]   (the peer for netprof on another
+//!                                       Amiga; serve.rs)
 //!   netprof watch [iface=NAME] [secs=N]
 //!   netprof recv HOST [port=N] [mb=N] [buf=N] [rcvbuf=N] [sndbuf=N] [nodelay] [iface=NAME] [quiet]
 //!                [noidle] [nosample]   (also for send)
@@ -1211,7 +1213,8 @@ fn usage() {
     say!("        rtt HOST [port=N] [count=N] [size=N]");
     say!("        soakrecv | soaksend | soakrtt HOST [secs=N] [mb=N] [quiet]   (every byte checked)");
     say!("        disk FILE [mb=N] [buf=N] [keep]   (write then read FILE sequentially; deleted after unless keep)");
-    say!("HOST runs tools/netprof-host (default port {}). Sizes take k and m.", DEFAULT_PORT);
+    say!("        serve [port=N] [count=N]   (be the peer for netprof on another Amiga)");
+    say!("HOST runs tools/netprof-host, or netprof serve on another Amiga (default port {}). Sizes take k and m.", DEFAULT_PORT);
 }
 
 /// `disk FILE [mb=N] [buf=N] [keep]`: how fast this machine's disk writes
@@ -1343,6 +1346,7 @@ pub extern "C" fn rust_main(args: *const u8, arglen: i32) -> i32 {
         "send" => run_xfer(&lib, &a, Dir::Send, &mut timer, &clock),
         "rtt" => run_rtt(&lib, &a, &clock),
         "soakrecv" | "soaksend" | "soakrtt" => soak::run_soak(&lib, &a, &mode.to_ascii_lowercase(), &clock),
+        "serve" => serve::run_serve(&lib, &a, &clock),
         _ => {
             usage();
             5
@@ -1350,4 +1354,5 @@ pub extern "C" fn rust_main(args: *const u8, arglen: i32) -> i32 {
     }
 }
 
+mod serve;
 mod soak;

@@ -322,8 +322,11 @@ What it does:
 
 `testprogs/s2test` checks a SANA-II driver from a Shell (32 checks):
 `s2test <unit> <device> [myip gwip] [mtu=N] [mbit=N]`. The `events` mode
-waits 60 s for DISCONNECT, CONNECT and CONFIGCHANGED, driven from the host
-with QMP `set_link` and `announce-self`. The `prom` mode holds a
+waits up to 60 s for DISCONNECT then CONNECT (`events announce`: also
+CONFIGCHANGED), driven from the host with QMP `set_link` and
+`announce-self`. The `closepend` mode closes an opener with writes still
+waiting; it uses e1000e_diag.device's TXMUTE command when the driver has
+it. The `prom` mode holds a
 promiscuous open while the host reads QMP `query-rx-filter`. `burst` starts 32
 writes at once and aborts the last 8; `stats` prints the driver's special
 statistics (the fourth is writes that waited for a slot), also while a stack
@@ -430,6 +433,7 @@ netprof cpu                        CopyMemQuick speed and the idle meter
 netprof recv HOST [mb=64] [buf=32k] [rcvbuf=N] [sndbuf=N] [nodelay] [iface=NAME]
 netprof send HOST [mb=64] ...      the same, uploading
 netprof rtt HOST [count=200] [size=64]
+netprof serve [port=4500] [count=N]   be netprof-host on this Amiga, for a peer Amiga
 netprof watch [iface=NAME] [secs=10]   the counters while something else runs
 ```
 

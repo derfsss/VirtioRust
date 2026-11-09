@@ -727,11 +727,16 @@ fn run(ctx: &mut Ctx, my_ip: [u8; 4], gw_ip: [u8; 4], want_mtu: u32, want_bps: u
     drop(hook);
 }
 
-/// `events` mode: configure the unit, then report each link and
-/// configuration event within 60 seconds (QMP set_link / announce-self
-/// from outside drive them). Passes when it saw DISCONNECT, CONNECT and
-/// CONFIGCHANGED.
-fn run_events(ctx: &mut Ctx) {
+/// `events` mode: configure the unit, then report each link event within
+/// 60 seconds (QMP set_link from outside drives them; `events announce`
+/// also wants CONFIGCHANGED, from QMP announce-self). Passes when it saw
+/// DISCONNECT, then CONNECT (and CONFIGCHANGED with `announce`).
+///
+/// CONNECT is asked for only after a DISCONNECT: with the link up, a driver
+/// answers a CONNECT request at once (the link is already connected), so
+/// asking for it first would end the wait straight away. The 60 seconds
+/// are measured, not counted per request.
+fn run_events(ctx: &mut Ctx, announce: bool) {
     let tags = [
         TagItem { ti_Tag: S2_COPY_TO_BUFF, ti_Data: tag_copy_to as *const () as usize as u32 },
         TagItem { ti_Tag: S2_COPY_FROM_BUFF, ti_Data: tag_copy_from as *const () as usize as u32 },
@@ -750,19 +755,29 @@ fn run_events(ctx: &mut Ctx) {
     a.set(S2_CONFIGINTERFACE, 0);
     a.r.set_src_mac(&factory);
     ctx.do_io(&a);
-    say!("s2test: waiting 60 s for link and configuration events");
+    say!("s2test: waiting 60 s for link{} events", if announce { " and configuration" } else { "" });
     amigaos4::serial_println!("s2test: events armed");
-    let want = S2EVENT_DISCONNECT | S2EVENT_CONNECT | S2EVENT_CONFIGCHANGED;
+    let want = S2EVENT_DISCONNECT | S2EVENT_CONNECT | if announce { S2EVENT_CONFIGCHANGED } else { 0 };
     let mut seen = 0u32;
     let mut log = Vec::new();
-    let mut left_ms = 60_000u32;
-    while seen & want != want && left_ms > 0 {
+    let limit_ms = 60_000u64;
+    let t0 = ctx.timer.up_time();
+    let elapsed_ms = |ctx: &Ctx| {
+        let t = ctx.timer.up_time();
+        (t.secs as u64 * 1000 + t.micros as u64 / 1000).saturating_sub(t0.secs as u64 * 1000 + t0.micros as u64 / 1000)
+    };
+    while seen & want != want && elapsed_ms(ctx) < limit_ms {
+        let mut ask = want & !seen;
+        if seen & S2EVENT_DISCONNECT == 0 {
+            // Not until the link has gone down (see the doc comment).
+            ask = (ask & !S2EVENT_CONNECT) | S2EVENT_DISCONNECT;
+        }
         let ev = ctx.clone_req(&a).unwrap();
         ev.r.io().set_command(S2_ONEVENT);
-        ev.r.set_wire_error(want & !seen | S2EVENT_DISCONNECT | S2EVENT_CONNECT);
+        ev.r.set_wire_error(ask);
         ctx.send(&ev);
-        let step = 5000u32.min(left_ms);
-        match ctx.wait(&ev, step) {
+        let step = (limit_ms - elapsed_ms(ctx).min(limit_ms)).min(5000) as u32;
+        match ctx.wait(&ev, step.max(1)) {
             Some((0, got)) => {
                 seen |= got;
                 log.push(got);
@@ -773,14 +788,17 @@ fn run_events(ctx: &mut Ctx) {
                 ctx.abort_wait(&ev);
             }
         }
-        left_ms -= step;
         // SAFETY: a request that came back.
         unsafe { sys::exec_delete_iorequest(ev.r.as_ptr()) };
     }
     ctx.check(
         "link-events",
         seen & want == want,
-        alloc::format!("events in order {:x?} (DISCONNECT 0x400, CONNECT 0x200, CONFIGCHANGED 0x100)", log),
+        alloc::format!(
+            "events in order {:x?} after {} ms (DISCONNECT 0x400, CONNECT 0x200, CONFIGCHANGED 0x100)",
+            log,
+            elapsed_ms(ctx)
+        ),
     );
     ctx.close(a);
 }
@@ -968,7 +986,7 @@ pub extern "C" fn rust_main(args: *const u8, arglen: i32) -> i32 {
     let mut ctx = Ctx { port, timer, devname, unit, passed: 0, failed: 0 };
     say!("s2test: {} unit {}, {}.{}.{}.{} -> {}.{}.{}.{}", name, unit, my_ip[0], my_ip[1], my_ip[2], my_ip[3], gw_ip[0], gw_ip[1], gw_ip[2], gw_ip[3]);
     if words.iter().any(|w| *w == "events") {
-        run_events(&mut ctx);
+        run_events(&mut ctx, words.iter().any(|w| *w == "announce"));
     } else if words.iter().any(|w| *w == "prom") {
         run_prom(&mut ctx);
     } else if words.iter().any(|w| *w == "stats") {

@@ -17,8 +17,9 @@
 //!   leak                        free memory around resets, offline/online,
 //!                               traffic and tasks, each on its own.
 //!   closepend                   close an opener with writes still waiting
-//!                               for a transmit slot (meaningful with
-//!                               virtionet's test-tx-hold build).
+//!                               for a transmit slot (e1000e_diag.device:
+//!                               its TXMUTE command; virtionet: its
+//!                               test-tx-hold build).
 //!
 //! Every check prints PASS or FAIL by name; a test that cannot run says so
 //! and fails.
@@ -30,6 +31,8 @@ use amigaos4::device::ioerr::IOERR_NOCMD;
 
 const T_UNUSED: u32 = 0x88B5; // an IEEE "local experimental" EtherType nobody reads
 const VNET_CMD_TESTFAULT: u16 = 0x8001;
+/// e1000e_diag.device's test command: stop writing the transmit tail.
+const E1000E_CMD_TXMUTE: u16 = 0x8003;
 const MEMF_ANY: u32 = 0;
 
 // ---- Copy functions that always fail ----
@@ -996,12 +999,31 @@ pub fn run_closepend(ctx: &mut Ctx, my_ip: [u8; 4], gw_ip: [u8; 4]) {
         ctx.close(a);
         return;
     };
+    // A driver that takes E1000E_CMD_TXMUTE (e1000e_diag.device) stops
+    // telling the card about new frames, so writes fill its ring and then
+    // wait: more writes than its 63 free slots are needed. Others answer
+    // IOERR_NOCMD, and 40 writes test a 4-slot build (virtionet's
+    // test-tx-hold). e1000e_diag's transmit watchdog resets the card about
+    // 2 s later, which ends the mute.
+    let muted = {
+        let Some(m) = ctx.clone_req(&a) else {
+            ctx.check("closepend-mute", false, String::from("no request"));
+            ctx.close(b);
+            ctx.close(a);
+            return;
+        };
+        m.r.io().set_command(E1000E_CMD_TXMUTE);
+        let (e, _) = ctx.do_io(&m);
+        free_req(m);
+        e == 0
+    };
+    let writes = if muted { 100 } else { 40 };
     // Raised priority so the unit task cannot drain the ring in between.
     // SAFETY: this task.
     let old = unsafe { sys::exec_set_task_pri(sys::exec_find_task(core::ptr::null()), 10) };
     let payload = arp_request(&station, my_ip, gw_ip);
     let mut ws: Vec<Req> = Vec::new();
-    for _ in 0..40 {
+    for _ in 0..writes {
         let Some(mut w) = ctx.clone_req(&b) else { break };
         set_write(&mut w, S2_BROADCAST, 0, 0x0806, &[0xff; 6], &payload);
         ctx.send(&w);
@@ -1032,7 +1054,7 @@ pub fn run_closepend(ctx: &mut Ctx, my_ip: [u8; 4], gw_ip: [u8; 4]) {
     ctx.check(
         "close-with-pending-writes",
         back == n && waiting > 0,
-        alloc::format!("{} writes, {} still waiting at close, {} came back ({} aborted)", n, waiting, back, aborted),
+        alloc::format!("{} writes{}, {} still waiting at close, {} came back ({} aborted)", n, if muted { " (transmit muted)" } else { "" }, waiting, back, aborted),
     );
     alive(ctx, &mut a, "alive-after-closepend", &station, my_ip, gw_ip);
     ctx.close(a);
